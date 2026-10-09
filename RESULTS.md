@@ -354,3 +354,32 @@ The size and budget are the owner's decision (D25).
 - Learning: no model was trained.
 - Mixed precision and fused attention (excluded by the owner).
 - Throughput under a stable mains supply.
+
+## 2026-10-09 · PLAN step 10b: Task B learning check
+
+**Purpose.** Before the 12-run matrix (D26), check that the chosen model learns text8 with Task A's optimizer.
+
+**Setup.** One centralized run, seed 7, 2,000 steps of 32 × 256 characters (16.4M characters):
+
+- The D26 configuration (`configs/task_b/centralized.toml`, 46,050,432 parameters, learning rate 0.001, decay over the last 20%), with `train.steps=2000`, `train.eval_every=250`.
+- Commit `85ea154`, clean tree; RTX 4070 Laptop GPU; run `20261009T050539Z_taskB-learncheck_s7`. Keep-awake held, no stalls, no runtime warnings.
+
+**Results.**
+
+| Step | 0 | 250 | 500 | 1,000 | 1,500 | 2,000 |
+|---|---|---|---|---|---|---|
+| Validation bits per character (first 1M characters) | 4.958 | 2.194 | 1.998 | 1.854 | 1.788 | 1.685 |
+
+Test bits per character, whole test split: **1.750**.
+
+**What this shows.**
+
+1. **The model learns text8 smoothly with these settings.** The loss stays finite, falls at every evaluation, and drops again during the final decay. For scale, the parent CASSANDRA model (201.6M parameters, 204.8M characters) reached 1.336. This run used 16.4M characters.
+2. **Without a balance loss, routing collapses onto a few experts per layer.**
+   - On the test split, 5 of 8 experts in layer 0 get under 0.025 of tokens. Layers 1 to 4 have 3 or 4 such experts each; layer 5 has 1.
+   - The collapse is already there at step 250 and does not recover.
+   - Task A, with the same zero balance coefficient, never showed this: its least-used expert never fell below 0.062.
+   - The centralized reference would then use only part of its experts, while the sliced arms are forced to spread tokens over each worker's held experts. That would confound the Task B comparison. The balance coefficient for Task B is put to the owner.
+3. **Training ran at 0.53 s per step**, against the timing pilot's 0.21 s unthrottled minimum. The mains adapter dropped out 98 times in 22 minutes (196 changes logged), about every 13 seconds. The battery still charged, from 55% to 63% over the first 11 minutes. At this pace a 20,000-step run takes about 3 hours, and the 12-run matrix about 36 hours.
+
+**Not tested:** any setting other than these; longer training; the simulated arms on text8 (tested on CPU only).

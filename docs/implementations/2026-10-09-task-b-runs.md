@@ -22,15 +22,14 @@ Part b builds the two run scripts, runs the learning check, and then the 12-run 
 
 ## What Changed
 
-To be completed after implementation. Planned:
-
 | File | Description |
 |---|---|
 | `scripts/train_task_b_centralized.py` | Centralized training on text8: validation curve every `eval_every` steps, test bits per character at the end, final model saved. |
-| `scripts/train_task_b_sliced.py` | The simulated arms on text8 (`sim.mode` sliced, partial or full), with the step 6 harness: per-round slices, workers, merge, checkpoint, `--resume`. |
+| `scripts/train_task_b_sliced.py` | The simulated arms on text8 (`sim.mode` sliced, partial or full), with the step 6 harness: per-round slices, workers, merge, checkpoint, `--resume`. Refuses `sim.skew` other than 0 (skew is defined over Task A's maps). |
+| `cassandra_chorus/metrics/task_b.py` | `evaluate_bpc` also sums the model's per-layer expert counts, so Task B logs expert usage. |
 | `configs/task_b/centralized.toml`, `configs/task_b/sliced.toml` | The D26 settings. |
-| `configs/queues/task_b_matrix.toml` | The 12 runs. |
-| `tests/test_task_b_scripts.py` | End-to-end on CPU against a tiny synthetic corpus, resume identity, and a check that the configurations match D25 and D26. |
+| `configs/queues/task_b_matrix.toml` | The 12 runs, ordered by seed (all four arms of seed 7 first). |
+| `tests/test_task_b_scripts.py` | 7 tests: the centralized script and each simulated arm end to end on CPU against a tiny synthetic corpus; a resumed run ending bitwise identical to an uninterrupted one; the configurations and the queue against D25 and D26. |
 
 ## Implementation Approach
 
