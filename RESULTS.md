@@ -413,3 +413,19 @@ Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs cont
 
 - The queue runner was stopped while run 1 was training. Run 1 finished on its own; nothing started after it. Its queue log therefore has no finish entry for run 1; the run's own log is the record.
 - The remaining 11 runs (entries 2 to 12 of `configs/queues/task_b_matrix.toml`, unchanged) are in `C:\Users\senso\chorus-runs\queues\task_b_matrix_rest.toml`, verified identical, ready for the next session.
+
+**Run 2, sliced (Gate A main setting), seed 7.**
+
+- Run `20261009T194909Z_taskB-sliced-coverage_s7`, commit `bb20b0e` (differs from run 1's `e0851aa` in documentation only), clean tree.
+- 4 workers × 125 steps × 40 rounds = 20,000 worker steps, 163.8M characters, 2.21 h on the RTX 4070 Laptop GPU.
+
+| Round | 1 | 8 | 16 | 24 | 32 | 40 |
+|---|---|---|---|---|---|---|
+| Merged validation bits per character (first 1M characters) | 2.919 | 1.834 | 1.722 | 1.657 | 1.585 | 1.534 |
+
+- **Test bits per character: 1.6020**, against 1.4388 centralized on the same seed. Relative gap +11.3%, above S0-A-04's 5%.
+  - This is one seed of three; S0-A-06 needs every seed. The verdict waits for the matrix.
+  - It is not yet known whether the full-model and partial-update arms show the same gap.
+- Every expert is used: the least-used gets 0.104 to 0.192 of tokens per layer on the test split.
+- Keep-awake held, no stalls, no standby, no runtime warnings; 420 mains drop-outs.
+- The matrix resumed on 2026-10-09 at 22:49 local from `task_b_matrix_rest.toml`. `MUSAHIT_Nightly` was removed from the local preflight avoid list on 2026-10-10 (owner decision): its folder no longer exists, and the task fails at launch.
