@@ -5,7 +5,7 @@
 | PLAN step | 10 · Task B on text8, part b |
 | Branch | `stage0/10-task-b` |
 | SRS requirements | S0-F-13, S0-F-14, S0-F-19, S0-F-20, S0-F-26, S0-A-04, S0-A-06; decisions D17, D25, D26 |
-| Status | Planned |
+| Status | Implemented; checks passed; matrix launched 2026-10-09 |
 
 ## Problem / Motivation
 
@@ -68,7 +68,13 @@ If either fails, the owner hears before any matrix run.
 
 ## Verification
 
-To be completed after implementation.
+- **Tests:** `python -m pytest tests/test_task_b_scripts.py`, 7 passed (CPU), including a resumed simulated run that ends bitwise identical to an uninterrupted one. The full suite passed at `51b8a91` (part a); the part b tests at `924e333` and `16f521d`.
+- **Learning check** (balance loss 0): run `20261009T050539Z_taskB-learncheck_s7`, test 1.750 bits per character after 2,000 steps; routing collapsed onto a few experts per layer, which led to D27.
+- **Re-check** (balance loss 0.01): run `20261009T054243Z_taskB-learncheck-bal001_s7`, test 1.743; no negligible expert.
+- **GPU check of the simulated arms:** run `20261009T053151Z_taskB-simcheck_s7`, 2 full-size rounds, completed.
+- All three are recorded in `RESULTS.md`. The matrix runs are recorded there as they complete.
+
+**Not tested before the matrix:** the partial-update and full-averaging arms at full size on the GPU (CPU only; they share the code path of the sliced arm, which was checked on the GPU).
 
 ## Related Docs
 

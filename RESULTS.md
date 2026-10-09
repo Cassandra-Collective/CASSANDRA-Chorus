@@ -383,3 +383,12 @@ Test bits per character, whole test split: **1.750**.
 3. **Training ran at 0.53 s per step**, against the timing pilot's 0.21 s unthrottled minimum. The mains adapter dropped out 98 times in 22 minutes (196 changes logged), about every 13 seconds. The battery still charged, from 55% to 63% over the first 11 minutes. At this pace a 20,000-step run takes about 3 hours, and the 12-run matrix about 36 hours.
 
 **Not tested:** any setting other than these; longer training; the simulated arms on text8 (tested on CPU only).
+
+**Re-check with the balance loss (D27), and a GPU check of the simulated arms.** Same settings, plus the Switch balance loss at 0.01.
+
+| Run | What | Result |
+|---|---|---|
+| `20261009T054243Z_taskB-learncheck-bal001_s7` | Centralized, 2,000 steps, commit `16f521d` | Validation 1.979, 1.844, 1.783, 1.680 at steps 500, 1,000, 1,500, 2,000; **test 1.743** (1.750 without the loss). No negligible expert in any layer at any evaluation. On the test split the least-used expert gets 0.125 to 0.229 of tokens per layer, against 0.000 to 0.003 without the loss. |
+| `20261009T053151Z_taskB-simcheck_s7` | Sliced arm at full size on the GPU, 2 rounds (1,000 worker steps), commit `16f521d` | Both rounds, merges, evaluations and 184 MB checkpoint writes completed; merged validation 2.919 then 2.567, test 2.602. No negligible expert (least-used share 0.066 to 0.181 per layer). |
+
+Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs continued (83 in the 21-minute re-check). Its steps took 0.44 s, which puts the 12-run matrix at about 30 to 36 hours.
