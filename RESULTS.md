@@ -392,3 +392,24 @@ Test bits per character, whole test split: **1.750**.
 | `20261009T053151Z_taskB-simcheck_s7` | Sliced arm at full size on the GPU, 2 rounds (1,000 worker steps), commit `16f521d` | Both rounds, merges, evaluations and 184 MB checkpoint writes completed; merged validation 2.919 then 2.567, test 2.602. No negligible expert (least-used share 0.066 to 0.181 per layer). |
 
 Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs continued (83 in the 21-minute re-check). Its steps took 0.44 s, which puts the 12-run matrix at about 30 to 36 hours.
+
+## 2026-10-09 · PLAN step 10b: Task B matrix, run 1 of 12 (parked after it)
+
+**Run 1, centralized, seed 7.**
+
+- Run `20261009T060425Z_taskB-central_s7`, commit `e0851aa`, clean tree, configuration `configs/task_b/centralized.toml` (D26, D27).
+- 20,000 steps, 163.8M characters, 2.47 h of training on the RTX 4070 Laptop GPU.
+
+| Step | 0 | 2,000 | 4,000 | 8,000 | 12,000 | 16,000 | 18,000 | 20,000 |
+|---|---|---|---|---|---|---|---|---|
+| Validation bits per character (first 1M characters) | 4.958 | 1.735 | 1.629 | 1.490 | 1.435 | 1.402 | 1.367 | 1.338 |
+
+- **Test bits per character, whole test split (4,999,936 characters): 1.4388.** This is the reference for S0-A-04 on seed 7. The validation figure covers a different, smaller set and is not a test estimate.
+- Every expert is used: the least-used gets 0.199 to 0.234 of tokens per layer on the test split.
+- Keep-awake held, no stalls, no standby, no runtime warnings. 395 mains drop-outs during the run.
+- At step 1,000 its validation figure (1.8444) equals the balance-loss re-check's to every printed digit. That run had the same seed and the same learning rate up to that step: a free determinism check.
+
+**Parked at the owner's request (2026-10-09).**
+
+- The queue runner was stopped while run 1 was training. Run 1 finished on its own; nothing started after it. Its queue log therefore has no finish entry for run 1; the run's own log is the record.
+- The remaining 11 runs (entries 2 to 12 of `configs/queues/task_b_matrix.toml`, unchanged) are in `C:\Users\senso\chorus-runs\queues\task_b_matrix_rest.toml`, verified identical, ready for the next session.
