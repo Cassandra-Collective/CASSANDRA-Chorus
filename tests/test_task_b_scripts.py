@@ -68,3 +68,74 @@ def test_task_b_configs_match_the_owner_decisions():
     assert (cfg.train.steps, cfg.optim.batch_size, cfg.text8.context_length) == (20000, 32, 256)  # D26
     assert (cfg.model.attention, cfg.model.dispatch) == ("explicit", "sparse")  # owner decisions 2026-10-09, 2026-10-07
     assert (cfg.optim.lr, cfg.optim.decay_fraction, cfg.optim.final_lr_ratio) == (1e-3, 0.2, 0.1)  # Task A's optimizer
+
+
+SIM_TINY = ["sim.local_steps=2", "sim.rounds=3", "sim.equal_compute_steps=24", "eval.curve_max_chars=500",
+            "optim.batch_size=4", "optim.warmup_steps=2"]
+
+
+@pytest.mark.parametrize("extra", [[], ["sim.mode=partial", "sim.router_rule=all"], ["sim.mode=full", "sim.router_rule=all"]])
+def test_simulated_task_b_arms_end_to_end_on_cpu(corpus, extra):
+    tmp_path, data_overrides = corpus
+    overrides = ['run.device="cpu"', "run.name=sim-b-test", *TINY_MODEL, *data_overrides, *SIM_TINY, *extra]
+    runs = run("scripts.train_task_b_sliced", "configs/task_b/sliced.toml", overrides, tmp_path)
+    (run_dir,) = list(runs.iterdir())
+    recs = records(run_dir)
+    rounds = [r for r in recs if r["type"] == "round"]
+    assert [r["round"] for r in rounds] == [0, 1, 2] and all(r["bpc"] > 0 for r in rounds)
+    (final,) = [r for r in recs if r["type"] == "final"]
+    assert final["worker_steps"] == 4 * 2 * 3 and final["characters"] == 24 * 4 * 16
+    assert final["test"]["windows"] == (2000 - 1) // 16 and recs[-1]["status"] == "completed"
+
+
+def test_resumed_task_b_run_ends_bitwise_identical(corpus):
+    import torch
+
+    tmp_path, data_overrides = corpus
+    overrides = ['run.device="cpu"', *TINY_MODEL, *data_overrides, *SIM_TINY]
+    straight = run("scripts.train_task_b_sliced", "configs/task_b/sliced.toml", overrides + ["run.name=straight"], tmp_path)
+    (straight_dir,) = [d for d in straight.iterdir() if "straight" in d.name]
+    args = [sys.executable, "-m", "scripts.train_task_b_sliced", "--config", "configs/task_b/sliced.toml",
+            "--stop-after-round", "1"]
+    for o in overrides + ["run.name=interrupted"]:
+        args += ["--set", o]
+    env = {**os.environ, RUNS_DIR_ENV: str(tmp_path / "runs"), DATA_DIR_ENV: str(tmp_path / "data")}
+    stopped = subprocess.run(args, cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=600)
+    assert stopped.returncode == 3, stopped.stderr
+    (resumed_dir,) = [d for d in (tmp_path / "runs").iterdir() if "interrupted" in d.name]
+    resumed = subprocess.run([sys.executable, "-m", "scripts.train_task_b_sliced", "--resume", str(resumed_dir)],
+                             cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=600)
+    assert resumed.returncode == 0, resumed.stderr
+    a = torch.load(straight_dir / "final_model.pt", weights_only=True)
+    b = torch.load(resumed_dir / "final_model.pt", weights_only=True)
+    assert a.keys() == b.keys() and all(torch.equal(a[k], b[k]) for k in a)
+    final = lambda d: [r for r in records(d) if r["type"] == "final"][0]["test"]["bpc"]  # noqa: E731
+    assert final(straight_dir) == final(resumed_dir)
+
+
+def test_task_b_matrix_queue_matches_the_decisions():
+    from cassandra_chorus.config import load_config
+    from scripts.ops.run_queue import load_queue
+    from scripts.train_task_b_centralized import CentralizedTaskBConfig
+    from scripts.train_task_b_sliced import SlicedTaskBConfig
+
+    runs, stop = load_queue(REPO_ROOT / "configs" / "queues" / "task_b_matrix.toml")
+    assert stop and len(runs) == 12
+    seen = set()
+    for entry in runs:
+        a = entry["args"]
+        sets = [a[i + 1] for i, x in enumerate(a) if x == "--set"]
+        schema = CentralizedTaskBConfig if entry["module"].endswith("centralized") else SlicedTaskBConfig
+        cfg = load_config(REPO_ROOT / a[a.index("--config") + 1], schema, sets)
+        if schema is SlicedTaskBConfig:
+            s = cfg.sim
+            assert (s.n_workers, s.capacity, s.local_steps, s.rounds, s.policy) == (4, 4, 125, 40, "coverage")
+            assert s.n_workers * s.local_steps * s.rounds == 20000  # equal compute (D17, D26)
+            arm = s.mode
+            assert s.router_rule == ("holders" if arm == "sliced" else "all")  # D11, D21
+        else:
+            arm = "centralized"
+            assert cfg.train.steps == 20000
+        seen.add((arm, cfg.run.seed, cfg.run.name))
+    assert {(arm, seed) for arm, seed, _ in seen} == {(a, s) for a in ("centralized", "sliced", "partial", "full") for s in (7, 11, 19)}
+    assert len({name for _, _, name in seen}) == 4  # one run name per arm
