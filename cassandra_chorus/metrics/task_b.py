@@ -21,20 +21,30 @@ def evaluate_bpc(model, data: Text8, split: str, device: torch.device | str, max
                  batch_windows: int = 64) -> dict:
     """Bits per character of ``model`` on ``split`` (or its first ``max_chars`` characters).
 
-    Returns ``bpc``, ``nll_nats`` (per character), ``scored`` and ``windows``. No side
-    effects except evaluation mode, which is restored afterwards.
+    Returns ``bpc``, ``nll_nats`` (per character), ``scored``, ``windows`` and, for a
+    mixture-of-experts model, ``expert_counts`` (``[layers][E]`` tokens routed to each
+    expert over every scored position). No side effects except evaluation mode, which
+    is restored afterwards.
     """
     was_training = model.training
     model.eval()
     windows = data.n_windows(split, max_chars)
-    total_nats, scored = 0.0, 0
+    total_nats, scored, counts = 0.0, 0, None
     for first in range(0, windows, batch_windows):
         count = min(batch_windows, windows - first)
         inputs, targets = data.eval_windows(split, first, count)
-        logits = model(inputs.to(device)).logits
+        out = model(inputs.to(device))
+        logits = out.logits
+        layer_counts = getattr(out, "expert_counts", None)
+        if layer_counts is not None:
+            layer_counts = layer_counts.cpu()
+            counts = layer_counts if counts is None else counts + layer_counts
         total_nats += F.cross_entropy(logits.reshape(-1, logits.shape[-1]), targets.to(device).reshape(-1),
                                       reduction="sum").item()
         scored += targets.numel()
     model.train(was_training)
     nll = total_nats / max(scored, 1)
-    return {"bpc": nll / math.log(2), "nll_nats": nll, "scored": scored, "windows": windows}
+    result = {"bpc": nll / math.log(2), "nll_nats": nll, "scored": scored, "windows": windows}
+    if counts is not None:
+        result["expert_counts"] = counts.tolist()
+    return result
