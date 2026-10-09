@@ -104,7 +104,7 @@ A short learning check is proposed with it. It is not part of the pilot.
 | Data source | Parent's local copy, hash-checked | Download | Engineering default: no download needed, and the same file as the parent's numbers |
 | Evaluation protocol | Parent's: non-overlapping 256-character windows, full test split | Sliding windows (lower bpc, slower) | Engineering default: comparable with CASSANDRA's 1.336 |
 | Sizes timed | The three of D25 | | Owner, 2026-10-08 |
-| Precision and attention kernel in the pilot | **Open: owner** | fp32 with explicit attention only; also bf16 mixed precision; also fused attention | |
+| Precision and attention kernel | fp32 with the explicit (deterministic) attention path only, as in Task A | Also time bf16 mixed precision; also time fused attention (non-deterministic backward) | Owner, 2026-10-09: every Task B run stays reproducible bit for bit from configuration and seed |
 
 ## Verification
 

@@ -15,6 +15,7 @@ dist/
 # runs folder when CHORUS_RUNS_DIR is not set; on the reference laptop runs go
 # outside the repository (see README).
 /runs/
+/data/
 
 # Checkpoints and weights, wherever they end up
 *.pt
