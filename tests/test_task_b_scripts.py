@@ -68,6 +68,7 @@ def test_task_b_configs_match_the_owner_decisions():
     assert (cfg.train.steps, cfg.optim.batch_size, cfg.text8.context_length) == (20000, 32, 256)  # D26
     assert (cfg.model.attention, cfg.model.dispatch) == ("explicit", "sparse")  # owner decisions 2026-10-09, 2026-10-07
     assert (cfg.optim.lr, cfg.optim.decay_fraction, cfg.optim.final_lr_ratio) == (1e-3, 0.2, 0.1)  # Task A's optimizer
+    assert cfg.model.balance_coef == 0.01  # D27
 
 
 SIM_TINY = ["sim.local_steps=2", "sim.rounds=3", "sim.equal_compute_steps=24", "eval.curve_max_chars=500",
@@ -131,11 +132,13 @@ def test_task_b_matrix_queue_matches_the_decisions():
             s = cfg.sim
             assert (s.n_workers, s.capacity, s.local_steps, s.rounds, s.policy) == (4, 4, 125, 40, "coverage")
             assert s.n_workers * s.local_steps * s.rounds == 20000  # equal compute (D17, D26)
+            assert cfg.model.balance_coef == 0.01  # D27
             arm = s.mode
             assert s.router_rule == ("holders" if arm == "sliced" else "all")  # D11, D21
         else:
             arm = "centralized"
             assert cfg.train.steps == 20000
+            assert cfg.model.balance_coef == 0.01  # D27
         seen.add((arm, cfg.run.seed, cfg.run.name))
     assert {(arm, seed) for arm, seed, _ in seen} == {(a, s) for a in ("centralized", "sliced", "partial", "full") for s in (7, 11, 19)}
     assert len({name for _, _, name in seen}) == 4  # one run name per arm

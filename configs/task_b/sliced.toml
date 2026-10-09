@@ -19,7 +19,7 @@ n_heads = 6
 expert_hidden = 768
 n_experts = 8
 top_k = 2
-balance_coef = 0.0
+balance_coef = 0.01       # Switch load-balancing loss (D27)
 attention = "explicit"
 dispatch = "sparse"
 

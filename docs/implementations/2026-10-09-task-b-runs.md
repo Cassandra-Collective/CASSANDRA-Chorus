@@ -62,6 +62,7 @@ If either fails, the owner hears before any matrix run.
 | Decision | Chosen | Alternatives | Decided by |
 |---|---|---|---|
 | Size, budget, arms, learning check | As in D25 and D26 | | Owner, 2026-10-08 and 2026-10-09 |
+| Balance loss | Switch loss, coefficient 0.01, all arms | 0 as in Task A, reporting the collapse | Owner, 2026-10-09 (D27), after the learning check showed routing collapse at 0 |
 | Script structure | Separate Task B scripts mirroring Task A's | One shared driver for both tasks | Engineering default: Task A's scripts are verified (bitwise resume) and stay untouched; a shared driver can come later |
 | Curve frequency | Every 1,000 steps centralized; every round (500 worker steps) in the simulated arms | Every round for all | Engineering default: about 20 s per evaluation; cost is in the part a projections |
 
