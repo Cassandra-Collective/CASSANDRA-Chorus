@@ -305,3 +305,52 @@ The owner decided to tell them apart before Task B. The reading was registered b
 - Bypassing two or three layers at once.
 - What layer-0 experts specialize in.
 - Other budgets and sizes, and Task B.
+
+## 2026-10-09 · PLAN step 10a: Task B timing pilot
+
+**Purpose.** Choose the Task B model size and compute budget (SRS D25) from measured step times, not estimates. Untrained models: these are times and memory only.
+
+**Setup.**
+
+- Three sizes, all with 6 layers, 8 experts per layer, k = 2 and context 256:
+  - 20,476,672 parameters (width 256);
+  - 31,985,600 (width 320);
+  - 46,050,432 (width 384).
+- Real text8 training batches of 32 and 64 windows; fp32, explicit attention, sparse dispatch.
+- Each worker mode is built with the code the runs will use. Median and minimum of 50 steps after 10 warm-up steps; each model's own peak GPU memory.
+- `python -m scripts.pilot_task_b_timing --config configs/task_b/pilot.toml`, commit `51b8a91`, clean tree. Run `20261009T044556Z_taskB-timing-pilot_s7` on the RTX 4070 Laptop GPU, 917 s, keep-awake held, no runtime warnings. Full table: `results/task_b_timing_pilot.md`.
+
+**Mains drop-outs during the pilot.** The Windows event log shows 25 drop-outs in 15 minutes, and 17 of the 24 measurements overlap at least one. Steps then stall for up to 2.6 s, which inflates the medians. The full-averaging worker does exactly the centralized model's work, yet their medians differ by up to 30% at 46M. The minima agree across modes, and at 46M they match the 212 ms measured in step 2. Both are therefore given below:
+
+- **Minimum:** the unthrottled cost.
+- **Median:** the cost on this laptop as it behaved today.
+
+**Milliseconds per step, batch 32 × 256, minimum / median:**
+
+| Parameters | Centralized | Sliced worker | Partial-update worker | Full-averaging worker | Peak memory, centralized |
+|---|---|---|---|---|---|
+| 20.5M | 128 / 149 | 109 / 116 | 127 / 145 | 131 / 147 | 2.1 GB |
+| 32.0M | 166 / 191 | 139 / 152 | 159 / 192 | 162 / 234 | 2.7 GB |
+| 46.1M | 212 / 405 | 184 / 215 | 202 / 247 | 220 / 310 | 3.4 GB |
+
+At batch 64 a step takes 1.6 to 1.9 times as long as at 32 (minima), and peak memory reaches 5.9 GB at 46M. A whole test-split evaluation (19,531 windows) takes 54 s, 64 s and 109 s for the three sizes. A merge of four worker results takes 0.07 to 0.13 s.
+
+**What this shows:**
+
+- **Any of the three sizes fits.** The largest uses 3.4 GB of the 8 GB at batch 32.
+- **A sliced worker is only somewhat faster than the full model per step** (13% to 15% at the minima). Sparse dispatch already does k = 2 experts' work per token whatever the worker holds. Slicing saves memory and upload size, not per-token compute.
+- **Projected hours for the 12-run matrix**, at batch 32, with a validation curve every 1,000 steps (every round in the simulated arms) and one test evaluation per run:
+
+| Parameters | 10,000 steps (82M characters) | 20,000 steps (164M characters) |
+|---|---|---|
+| 20.5M | 4.7 to 5.2 h | 9.2 to 10.3 h |
+| 32.0M | 6.3 to 7.5 h | 12.5 to 14.9 h |
+| 46.1M | 8.3 to 11.2 h | 16.1 to 22.1 h |
+
+The size and budget are the owner's decision (D25).
+
+**Not tested:**
+
+- Learning: no model was trained.
+- Mixed precision and fused attention (excluded by the owner).
+- Throughput under a stable mains supply.

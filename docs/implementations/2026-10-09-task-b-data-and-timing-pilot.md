@@ -5,7 +5,7 @@
 | PLAN step | 10 · Task B on text8, part a: everything needed to choose a model size and budget (SRS D25) |
 | Branch | `stage0/10-task-b` |
 | SRS requirements | S0-F-19, S0-F-20 (bits per character), S0-N-02 (20M to 50M parameters), S0-A-04; decisions D25 |
-| Status | Planned |
+| Status | Implemented and run; timing pilot recorded in `RESULTS.md`; size and budget await the owner |
 
 ## Problem / Motivation
 
@@ -25,7 +25,7 @@ Part b, the run scripts and the run matrix, is planned after the owner approves 
 
 ## What Changed
 
-To be completed after implementation. Planned:
+As planned, plus `cassandra_chorus/paths.py` (`data_root`, from `CHORUS_DATA_DIR`), `.gitignore` (`/data/`) and `scripts/ops/launch_visible.ps1` (`-DataDir`). The pilot report is `results/task_b_timing_pilot.md`.
 
 | File | Description |
 |---|---|
@@ -108,7 +108,20 @@ A short learning check is proposed with it. It is not part of the pilot.
 
 ## Verification
 
-To be completed after implementation.
+- **Tests:** `python -m pytest -q`, 260 passed, CPU and GPU, at `51b8a91`. Six new tests use a synthetic corpus with known answers:
+  - hash, length and alphabet refusals;
+  - encoding and split bounds;
+  - training windows that are shifted copies inside the train split;
+  - reproducible sampling;
+  - evaluation windows that tile the split, scoring every character once;
+  - bits per character of a uniform model equal to log₂ 27, and of an oracle near 0.
+- **Real corpus:** it loads in 2.5 s, hash verified. It has 19,531 test windows (4,999,936 scored characters, the parent project's count) and 3,906 windows in the first 1M validation characters.
+- **Smoke run:** one size, a few steps, before the full pilot. It caught a measurement flaw: with the centralized model left on the GPU, worker peak memory included it. The global model now stays on the CPU while workers are timed.
+- **Pilot:** run `20261009T044556Z_taskB-timing-pilot_s7`, 917 s, at `51b8a91` with a clean tree; see `RESULTS.md`.
+  - Untrained test bits per character: 4.85 to 4.96, near the uniform log₂ 27 = 4.75, as expected for a random initialization.
+  - 25 mains drop-outs overlapped 17 of the 24 timings, so the medians are inflated. Minima and medians are both reported.
+
+**Not tested:** training on text8; the Task B run scripts (part b); throughput under a stable mains supply.
 
 ## Related Docs
 
