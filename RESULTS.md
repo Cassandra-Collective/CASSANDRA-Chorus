@@ -429,3 +429,16 @@ Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs cont
 - Every expert is used: the least-used gets 0.104 to 0.192 of tokens per layer on the test split.
 - Keep-awake held, no stalls, no standby, no runtime warnings; 420 mains drop-outs.
 - The matrix resumed on 2026-10-09 at 22:49 local from `task_b_matrix_rest.toml`. `MUSAHIT_Nightly` was removed from the local preflight avoid list on 2026-10-10 (owner decision): its folder no longer exists, and the task fails at launch.
+
+**Run 3, partial update, seed 7.**
+
+- Run `20261009T220408Z_taskB-partial_s7`, commit `bb20b0e`, clean tree. Every worker holds all 8 experts and routes over them, but updates only its 4; router averaged over all workers (D21).
+- 20,000 worker steps, 163.8M characters, 2.38 h.
+
+| Round | 1 | 8 | 16 | 24 | 32 | 40 |
+|---|---|---|---|---|---|---|
+| Merged validation bits per character | 3.009 | 1.835 | 1.681 | 1.596 | 1.542 | 1.475 |
+
+- **Test bits per character: 1.5504**: +7.8% against centralized (1.4388), against +11.3% for the sliced arm on the same seed.
+- Every expert is used (least-used share 0.179 to 0.237 per layer).
+- Keep-awake held, no stalls, no runtime warnings; 431 mains drop-outs.
