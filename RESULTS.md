@@ -442,3 +442,18 @@ Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs cont
 - **Test bits per character: 1.5504**: +7.8% against centralized (1.4388), against +11.3% for the sliced arm on the same seed.
 - Every expert is used (least-used share 0.179 to 0.237 per layer).
 - Keep-awake held, no stalls, no runtime warnings; 431 mains drop-outs.
+
+**Second park (2026-10-10, owner request, before travel).**
+
+- **Mains outage.** During run 4 (full-model averaging, seed 7, `20261010T002852Z_taskB-fullavg_s7`), the battery ran down to 1%. Training froze from 01:37 to 03:30 UTC: the run logged one 6,822 s stall, and round 18 took 7,182 s instead of about 211 s. The owner restored power, and the run continued normally. Training is deterministic, so the stall changed wall-clock time only.
+- **Stopped at the owner's request after round 20 of 40** (queue runner first, then the run). Its checkpoint loads and resumes at round 21. The run's log has no end record; a resume appends a `resume` record, and the result equals an uninterrupted run (tested bitwise in `tests/test_task_b_scripts.py`).
+- **Next start.** `C:\Users\senso\chorus-runs\queues\task_b_matrix_resume2.toml`, verified:
+  - first `--resume` of run 4;
+  - then runs 5 to 12, entries 5 to 12 of `configs/queues/task_b_matrix.toml`, unchanged.
+
+  About 1.2 h for run 4, then about 9.6 h per seed.
+- **Done so far:** runs 1 to 3 (centralized, sliced and partial update on seed 7).
+
+| Seed 7, test bits per character | Centralized | Sliced | Partial update | Full-model averaging |
+|---|---|---|---|---|
+| Test bpc | 1.4388 | 1.6020 (+11.3%) | 1.5504 (+7.8%) | in progress, 20 of 40 rounds |
