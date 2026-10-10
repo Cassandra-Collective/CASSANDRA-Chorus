@@ -487,3 +487,5 @@ The queue resumed on 2026-10-10 at 08:39 UTC from `task_b_matrix_resume2.toml` (
 - **One negligible expert:** in run 6 (sliced, seed 11), expert 0 of layer 0 receives 0.011 of tokens on the test split, below the 0.025 line. Every other expert of the eight runs is above it.
 - **Speed:** runs 5 to 8 took about 1.6 to 1.9 h each, against 2.2 to 2.5 h before. Logged mains drop-outs fell to between 114 and 227 per run.
 - **Run 4's outage:** its first segment, stopped before the second park, wrote no power summary. Its 6,822 s outage stall is recorded as a `stall` record in its log.
+
+**Run 9, centralized, seed 19.** Run `20261010T163249Z_taskB-central_s19`, commit `df3a7ac`, clean tree, 1.96 h. Test bits per character **1.4353**: the seed 19 reference, within 0.0035 of seeds 7 and 11. Every expert used (least-used share 0.168); no stall, no warnings; 120 mains drop-outs.
