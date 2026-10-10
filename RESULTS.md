@@ -457,3 +457,33 @@ Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs cont
 | Seed 7, test bits per character | Centralized | Sliced | Partial update | Full-model averaging |
 |---|---|---|---|---|
 | Test bpc | 1.4388 | 1.6020 (+11.3%) | 1.5504 (+7.8%) | in progress, 20 of 40 rounds |
+
+## 2026-10-10 · PLAN step 10b: Task B matrix, runs 4 to 8 (seeds 7 and 11 complete)
+
+The queue resumed on 2026-10-10 at 08:39 UTC from `task_b_matrix_resume2.toml` (run 4 resumed at round 21, then runs 5 onward), with `stop_on_failure = false` because the owner was travelling and possibly offline. Every run exited with code 0 and recorded a completed end. Every run held keep-awake, with no runtime warnings and no stall, except the outage stall recorded for run 4's first segment. Clean tree at each start.
+
+| Run | Arm, seed | Run ID | Commit | Hours | Test bpc | Gap to centralized |
+|---|---|---|---|---|---|---|
+| 4 | Full-model averaging, 7 | `20261010T002852Z_taskB-fullavg_s7` | `1aba651` | 2.0 + 0.94 (resumed once) | 1.5300 | +6.3% |
+| 5 | Centralized, 11 | `20261010T093641Z_taskB-central_s11` | `df3a7ac` | 1.68 | 1.4386 | reference |
+| 6 | Sliced, 11 | `20261010T111737Z_taskB-sliced-coverage_s11` | `df3a7ac` | 1.68 | 1.5867 | +10.3% |
+| 7 | Partial update, 11 | `20261010T125827Z_taskB-partial_s11` | `df3a7ac` | 1.64 | 1.5474 | +7.6% |
+| 8 | Full-model averaging, 11 | `20261010T143649Z_taskB-fullavg_s11` | `df3a7ac` | 1.93 | 1.5242 | +5.9% |
+
+**Seeds 7 and 11, test bits per character** (relative gap to centralized with the same seed; S0-A-04 allows +5%):
+
+| Seed | Centralized | Sliced | Partial update | Full-model averaging |
+|---|---|---|---|---|
+| 7 | 1.4388 | 1.6020 (+11.3%) | 1.5504 (+7.8%) | 1.5300 (+6.3%) |
+| 11 | 1.4386 | 1.5867 (+10.3%) | 1.5474 (+7.6%) | 1.5242 (+5.9%) |
+
+**Observations so far** (two seeds of three; no verdict until seed 19):
+
+- **The two seeds agree closely.** Centralized differs by 0.0002 bits per character between them. Each arm's gap moves by at most 1 percentage point.
+- **Every simulated arm is above the 5% line on both seeds, including full-model averaging,** which involves no slicing at all. At this setting (H = 125, R = 40), local averaging alone costs about 6%.
+- **The arms keep the same order on both seeds:** full averaging, then partial update (about 1.5 to 1.7 points more), then sliced (about 2.7 to 3.5 points more again).
+  - This is the order Task A's routing-necessity results had.
+  - On text, restricting each worker's routing to its slice adds a cost in bits per character on top of local averaging.
+- **One negligible expert:** in run 6 (sliced, seed 11), expert 0 of layer 0 receives 0.011 of tokens on the test split, below the 0.025 line. Every other expert of the eight runs is above it.
+- **Speed:** runs 5 to 8 took about 1.6 to 1.9 h each, against 2.2 to 2.5 h before. Logged mains drop-outs fell to between 114 and 227 per run.
+- **Run 4's outage:** its first segment, stopped before the second park, wrote no power summary. Its 6,822 s outage stall is recorded as a `stall` record in its log.
