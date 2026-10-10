@@ -491,3 +491,5 @@ The queue resumed on 2026-10-10 at 08:39 UTC from `task_b_matrix_resume2.toml` (
 **Run 9, centralized, seed 19.** Run `20261010T163249Z_taskB-central_s19`, commit `df3a7ac`, clean tree, 1.96 h. Test bits per character **1.4353**: the seed 19 reference, within 0.0035 of seeds 7 and 11. Every expert used (least-used share 0.168); no stall, no warnings; 120 mains drop-outs.
 
 **Run 10, sliced, seed 19.** Run `20261010T183601Z_taskB-sliced-coverage_s19`, commit `dc23a78`, clean tree, 1.64 h. Test bits per character **1.5887**, **+10.7%** against centralized (1.4353). The sliced arm is now at +11.3%, +10.3% and +10.7% on seeds 7, 11 and 19. No negligible expert (least-used share 0.078); no stall, no warnings; 139 mains drop-outs.
+
+**Run 11, partial update, seed 19.** Run `20261010T201620Z_taskB-partial_s19`, commit `408a317`, clean tree, 1.63 h. Test bits per character **1.5408**, **+7.3%** against centralized; the partial-update arm is at +7.8%, +7.6% and +7.3% on seeds 7, 11 and 19. Every expert used (least-used share 0.157); no stall, no warnings; 107 mains drop-outs.
