@@ -5,7 +5,7 @@
 | PLAN step | 12 · Decision gate B: write-up of Stage 0 |
 | Branch | `stage0/12-report` |
 | SRS requirements | S0-N-07 (results state their limits); decisions D24, D28 |
-| Status | Planned |
+| Status | Written; every number checked against its source |
 
 ## Problem / Motivation
 
@@ -22,12 +22,10 @@ A reader outside the project, such as an academic advisor, needs one short docum
 
 ## What Changed
 
-To be completed after writing. Planned:
-
 | File | Description |
 |---|---|
-| `docs/stage0-report.md` | The report, about 3,000 words, English, for an academic reader. |
-| `README.md` | A pointer to the report. |
+| `docs/stage0-report.md` | The report: 2,776 words, English, for an academic reader. |
+| `README.md` | Status brought up to date (it still described PLAN step 1) and the report listed first. |
 
 ## Implementation Approach
 
@@ -55,7 +53,23 @@ The report is written from the committed record only (`RESULTS.md`, `results/*.m
 
 ## Verification
 
-To be completed after writing: every number in the report checked against its source file.
+Every number in the report was checked against its source. The sources:
+
+- `RESULTS.md`;
+- `results/task_a_gate_a.md`, `results/task_a_redundancy_probe.md` and `results/task_b_gate_b.md`;
+- the SRS.
+
+The check found and fixed five errors in the first draft:
+
+- the centralized removal range on Task A, which gave the marked variant's 8.6 instead of 8.0 for both variants;
+- the probe's registered reading, which was attributed to D24 rather than to its own commit;
+- the survey's provenance caveat, which did not match SRS section 10;
+- "routed by input", corrected to "routed by map";
+- run storage, given as "about 370 MB" where it is "up to about 370 MB", because centralized runs keep no checkpoint.
+
+No dashes, as the project's style requires.
+
+**Not done:** a review by someone outside the project.
 
 ## Related Docs
 
