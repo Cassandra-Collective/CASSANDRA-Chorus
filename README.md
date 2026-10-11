@@ -16,6 +16,7 @@ The architecture is to be reconsidered before any networked stage. Read [`docs/s
 ## Documents
 
 - [`docs/stage0-report.md`](docs/stage0-report.md): the Stage 0 technical report (start here)
+- [`docs/stage0-closeout.md`](docs/stage0-closeout.md): close-out record. Where the work stands, what went wrong and how it was handled, what is left for later
 - [`docs/SRS.md`](docs/SRS.md): software requirements specification
 - [`docs/PLAN.md`](docs/PLAN.md): plan memo, stages and Stage 0 work breakdown
 - [`docs/implementations/`](docs/implementations/): one document per change
