@@ -6,14 +6,21 @@ The model is a mixture-of-experts transformer. Each worker trains the shared par
 
 ## Status
 
-Stage 0, PLAN step 1 (repository skeleton): configuration, run logging, seeding and test setup. No model, data or training code exists yet, and there are no results.
+Stage 0 is complete and closes as a negative result (decision D28, 2026-10-11).
+
+- **Synthetic task (Gate A): passed.** Sliced training matched centralized accuracy, but its experts became interchangeable.
+- **Text8: the 5% criterion is missed on every seed.** Sliced training is +10.8% in bits per character behind a centralized model of the same size at equal compute. About 6 points of that come from local averaging itself, about 3 from routing restricted to each worker's slice, and about 1.4 from partial expert updates.
+
+The architecture is to be reconsidered before any networked stage. Read [`docs/stage0-report.md`](docs/stage0-report.md) first.
 
 ## Documents
 
+- [`docs/stage0-report.md`](docs/stage0-report.md): the Stage 0 technical report (start here)
 - [`docs/SRS.md`](docs/SRS.md): software requirements specification
 - [`docs/PLAN.md`](docs/PLAN.md): plan memo, stages and Stage 0 work breakdown
 - [`docs/implementations/`](docs/implementations/): one document per change
 - [`RESULTS.md`](RESULTS.md): hand-written record of runs that inform decisions
+- [`results/`](results/): generated tables (Gate A, redundancy probe, Task B)
 
 ## Running
 
