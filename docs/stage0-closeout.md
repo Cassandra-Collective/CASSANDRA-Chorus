@@ -90,7 +90,7 @@ These were caught before they reached a reported result unless stated otherwise:
 | Git backups | `C:\Users\senso\chorus-runs\chorus-all-*.bundle` (6) | Superseded by GitHub; safe to delete |
 | Old worktree | `C:\Users\senso\chorus-dev\stage0-next` | Branch `stage0/08-metrics`, merged; safe to remove |
 | Local branches | 15 | All merged into `main`; safe to delete |
-| Slide deck | claude.ai artifact (private) | 22 slides; out of date: no Task B, no Gate B |
+| Slide deck | claude.ai artifact (private) | 26 slides, updated 2026-10-11 with Task B, the gap breakdown and the Gate B decision. Shared only when the owner shares it from the page |
 
 The run logs are the one item whose loss would matter. A copy outside the laptop would protect them.
 
@@ -102,7 +102,7 @@ The run logs are the one item whose loss would matter. A copy outside the laptop
    - the modular-paths fallback.
 
    No study has been planned yet.
-2. **Update the slide deck** with Task B, the gap breakdown and the Gate B decision.
+2. ~~Update the slide deck~~ Done on 2026-10-11: Task B setup, results, gap breakdown and the Gate B decision were added, and the cover, stages, next-steps and open-questions slides brought up to date.
 3. **Write the proposal brief** for the owner's friend at ODTU and her academic advisor, from the report.
 4. **Have someone outside the project review the report.**
 5. **Housekeeping:**
