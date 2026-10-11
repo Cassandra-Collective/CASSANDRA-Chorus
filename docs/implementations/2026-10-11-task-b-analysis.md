@@ -5,7 +5,7 @@
 | PLAN step | 10 · Task B on text8, part c; prepares Decision gate B (step 12) |
 | Branch | `stage0/10-task-b` |
 | SRS requirements | S0-A-04, S0-A-06, S0-F-20, S0-F-23; decisions D25 to D27 |
-| Status | Planned |
+| Status | Implemented and run on the complete matrix; Gate B decision with the owner |
 
 ## Problem / Motivation
 
@@ -18,8 +18,6 @@ The 12-run Task B matrix (D25, D26, D27) is complete or nearly so. Its runs have
 As at Gate A, the numbers come from run logs only, mechanically, and missing runs are reported as missing, never as passes.
 
 ## What Changed
-
-To be completed after implementation. Planned:
 
 | File | Description |
 |---|---|
@@ -65,7 +63,18 @@ Let b_a,s be the test bits per character of arm a on seed s, with c = centralize
 
 ## Verification
 
-To be completed after implementation.
+- **Tests:** `python -m pytest tests/test_analyze_task_b.py`, 6 passed. They cover:
+  - a full matrix failing S0-A-04, with the three decomposition steps summing exactly to the sliced gap;
+  - a pass needing every seed;
+  - missing runs giving "incomplete", never a pass;
+  - run selection ignoring unfinished folders and other names, and refusing duplicates by name;
+  - expert usage and resume counts;
+  - the written report.
+- **On 11 of 12 runs** (before run 12 finished), the report marked seed 19's full-averaging run as missing and its decomposition as n/a.
+- **Final report:** `python -m scripts.analyze_task_b` at commit `ee2a7dd`, clean tree, on all 12 completed runs, written to `results/task_b_gate_b.md`.
+- **Cross-check:** every test value in the report matches the per-run figures recorded in `RESULTS.md` as each run finished. Those were read from the same logs by separate one-off scripts.
+
+**Not tested:** significance beyond three seeds (per-seed values are reported instead of a test).
 
 ## Related Docs
 

@@ -5,7 +5,7 @@
 | PLAN step | 10 · Task B on text8, part b |
 | Branch | `stage0/10-task-b` |
 | SRS requirements | S0-F-13, S0-F-14, S0-F-19, S0-F-20, S0-F-26, S0-A-04, S0-A-06; decisions D17, D25, D26 |
-| Status | Implemented; checks passed; matrix launched 2026-10-09 |
+| Status | Complete: all 12 matrix runs finished 2026-10-11 (analysis in part c) |
 
 ## Problem / Motivation
 
@@ -74,7 +74,16 @@ If either fails, the owner hears before any matrix run.
 - **GPU check of the simulated arms:** run `20261009T053151Z_taskB-simcheck_s7`, 2 full-size rounds, completed.
 - All three are recorded in `RESULTS.md`. The matrix runs are recorded there as they complete.
 
-**Not tested before the matrix:** the partial-update and full-averaging arms at full size on the GPU (CPU only; they share the code path of the sliced arm, which was checked on the GPU).
+**Not tested before the matrix:** the partial-update and full-averaging arms at full size on the GPU (CPU only; they share the code path of the sliced arm, which was checked on the GPU). The matrix then ran them at full size, three seeds each, all completed.
+
+**The matrix, 2026-10-09 to 2026-10-11:**
+
+- 12 of 12 runs completed with a clean working tree. They ran over three queue launches: the original queue, `task_b_matrix_rest.toml` and `task_b_matrix_resume2.toml`, with the owner's two parks in between.
+- One run resumed from its checkpoint: run 4, after the second park, at round 21.
+- Two power outages froze runs in place and cost time only: 1.9 h in run 4, and 7.0 h in standby in run 12.
+- For the last launch, `stop_on_failure` was set to false; no run failed.
+- Every run is recorded in `RESULTS.md`.
+- The analysis and the S0-A-04 verdict are in `docs/implementations/2026-10-11-task-b-analysis.md` and `results/task_b_gate_b.md`.
 
 ## Related Docs
 
