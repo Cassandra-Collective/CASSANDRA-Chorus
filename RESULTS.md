@@ -493,3 +493,53 @@ The queue resumed on 2026-10-10 at 08:39 UTC from `task_b_matrix_resume2.toml` (
 **Run 10, sliced, seed 19.** Run `20261010T183601Z_taskB-sliced-coverage_s19`, commit `dc23a78`, clean tree, 1.64 h. Test bits per character **1.5887**, **+10.7%** against centralized (1.4353). The sliced arm is now at +11.3%, +10.3% and +10.7% on seeds 7, 11 and 19. No negligible expert (least-used share 0.078); no stall, no warnings; 139 mains drop-outs.
 
 **Run 11, partial update, seed 19.** Run `20261010T201620Z_taskB-partial_s19`, commit `408a317`, clean tree, 1.63 h. Test bits per character **1.5408**, **+7.3%** against centralized; the partial-update arm is at +7.8%, +7.6% and +7.3% on seeds 7, 11 and 19. Every expert used (least-used share 0.157); no stall, no warnings; 107 mains drop-outs.
+
+**Run 12, full-model averaging, seed 19.** Run `20261010T215606Z_taskB-fullavg_s19`, commit `a871210`, clean tree. Test bits per character **1.5219**, **+6.0%**. Every expert used (least-used share 0.217); no runtime warnings.
+
+The laptop entered standby once during the run: training froze for 25,155 s (7.0 h), from 22:26 to 05:25 UTC, and the battery fell to 13%. It then continued and completed normally. Training is deterministic, so only the wall-clock time (8.8 h) changed. The queue ended at 06:43 UTC on 2026-10-11 with `queue_complete`, 0 failures.
+
+## 2026-10-11 · PLAN step 10c: Task B complete, the result for Decision gate B
+
+**Setup:**
+
+- 12 completed runs: four arms × seeds 7, 11 and 19, under D25, D26 and D27. The 46.1M model, 20,000 steps of 32 × 256 characters (163.8M characters) per run, balance loss 0.01. The simulated arms use 4 workers × 125 local steps × 40 rounds.
+- Report: `results/task_b_gate_b.md`, by `python -m scripts.analyze_task_b` at commit `ee2a7dd`, clean tree. It reads the run logs only.
+- Every run completed with a clean working tree; one resumed from its checkpoint (run 4).
+
+**S0-A-04 for the sliced arm: FAIL on every seed** (limit +5%; S0-A-06 needs every seed).
+
+| Arm | Seed 7 | Seed 11 | Seed 19 | Gap to centralized, mean (range) |
+|---|---|---|---|---|
+| Centralized | 1.4388 | 1.4386 | 1.4353 | reference |
+| Full-model averaging | 1.5300 | 1.5242 | 1.5219 | +6.1% (+5.9 to +6.3) |
+| Partial update | 1.5504 | 1.5474 | 1.5408 | +7.6% (+7.3 to +7.8) |
+| Sliced (Chorus) | 1.6020 | 1.5867 | 1.5887 | +10.8% (+10.3 to +11.3) |
+
+**Where the sliced arm's gap comes from.** Each step is measured by two arms that differ in one thing, as a percentage of centralized, and the three steps add up exactly:
+
+| Step | Arms compared | Mean (range) |
+|---|---|---|
+| Local averaging | full-model averaging vs centralized | +6.1% (+5.9 to +6.3) |
+| Partial updates | partial update vs full-model averaging | +1.4% (+1.3 to +1.6) |
+| Masked routing | sliced vs partial update | +3.2% (+2.7 to +3.6) |
+
+**What this shows (text8, this model size, budget and setting, three seeds):**
+
+1. **Sliced training is about 11% behind centralized, twice the 5% allowance, on every seed.** The seeds agree closely: centralized varies by 0.0035 bits per character across seeds, and each arm's gap by at most 1 percentage point. The ordering of the arms is identical on all three.
+2. **More than half of the gap is local averaging itself.** Full-model averaging, with no slicing, already costs about 6% at H = 125 local steps and R = 40 rounds. Every simulated arm shares this part, and the sweeps of PLAN step 11 (local steps, outer optimizer) target it. None of that has been tested on text.
+3. **Masked routing costs about 3 points on top, the largest step that is specific to slicing.** This is the text counterpart of the Gate A finding: routing restricted to the slice made experts interchangeable on Task A (D23), and on text it costs capacity, as D23 required Task B to show. Updating only part of the experts costs about 1.4 points.
+4. **Partial update, the closest published arm (SPES), lands at +7.6%. It is also over 5%, and it breaks Chorus's own goal**: every worker holds the whole model.
+5. **Expert usage held under the balance loss (D27).** One expert in one run (sliced, seed 11, layer 0) fell below 0.025 of tokens; every other expert of the 12 runs is above it.
+
+**Decision gate B (PLAN section 5).** "Gap within the criterion" does not apply. Whether +10.8% is a "moderate gap" (report it, and decide whether the flagship is still worth building at that cost) or a "large gap" (a negative result to publish, and the architecture to reconsider) is the owner's decision; PLAN does not define the boundary.
+
+**Operational record:**
+
+- Mains drop-outs throughout, and two outages that ran the battery low. Run 4 stalled 1.9 h; run 12 stalled 7.0 h in standby.
+- No result was affected, and no run was lost. One run resumed from its checkpoint; the queue continued unattended with `stop_on_failure = false`.
+
+**Not tested:**
+
+- Other local-step counts, outer optimizers, slice sizes or worker counts (PLAN step 11).
+- Router remedies, other model sizes and budgets, sliding-window evaluation.
+- Statistical tests beyond three seeds (the per-seed values are given).
