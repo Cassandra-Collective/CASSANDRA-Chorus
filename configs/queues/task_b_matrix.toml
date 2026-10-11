@@ -1,0 +1,51 @@
+# PLAN step 10: the Task B run matrix (owner decisions D25, D26). 12 runs, about 16 to 22 hours.
+# Ordered by seed: all four arms of seed 7, then 11, then 19, so each completed seed is a full comparison.
+stop_on_failure = true
+
+[[run]]
+module = "scripts.train_task_b_centralized"
+args = ["--config", "configs/task_b/centralized.toml", "--set", "run.seed=7"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7", "--set", "sim.mode=partial", "--set", "sim.router_rule=all", "--set", "run.name=taskB-partial"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7", "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "run.name=taskB-fullavg"]
+
+[[run]]
+module = "scripts.train_task_b_centralized"
+args = ["--config", "configs/task_b/centralized.toml", "--set", "run.seed=11"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=11"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=11", "--set", "sim.mode=partial", "--set", "sim.router_rule=all", "--set", "run.name=taskB-partial"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=11", "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "run.name=taskB-fullavg"]
+
+[[run]]
+module = "scripts.train_task_b_centralized"
+args = ["--config", "configs/task_b/centralized.toml", "--set", "run.seed=19"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=19"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=19", "--set", "sim.mode=partial", "--set", "sim.router_rule=all", "--set", "run.name=taskB-partial"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=19", "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "run.name=taskB-fullavg"]

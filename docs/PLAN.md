@@ -45,7 +45,7 @@ Steps are listed in dependency order. No dates are given: the pace depends on th
 | 8 | Metrics: accuracy, router consistency, expert usage, expert drift | Per-run report | S0-F-20 to S0-F-24, S0-F-27 |
 | 9 | **Decision gate A**: Task A results against criteria | Go, fix, or stop | S0-A-01 to S0-A-03, under the conditions of S0-A-05 and S0-A-06 |
 | 9a | Redundancy probe (owner decision 2026-10-08, SRS D24): from the saved Gate A models, forced routing per layer and per expert pair, and bypass of each mixture layer | What each expert learned; whether the experts are needed at all | D23, D24 |
-| 10 | Task B on text8 (arms per SRS D25): a timing pilot of three model sizes, then, after owner approval of size and budget, centralized, sliced, full-model and partial-update runs on seeds 7, 11 and 19 | Bits-per-character comparison | S0-F-19, S0-A-04, D25 |
+| 10 | Task B on text8 (arms per SRS D25, size and budget per D26): a timing pilot of three model sizes, a learning check, then centralized, sliced, full-model and partial-update runs on seeds 7, 11 and 19 | Bits-per-character comparison | S0-F-19, S0-A-04, D25, D26 |
 | 11 | Sweeps over local steps, slice size, worker count, dropout | Results tables | S0-F-23 |
 | 12 | **Decision gate B**: write-up of Stage 0 | Short technical report | S0-N-07 |
 
@@ -97,6 +97,7 @@ Setting (owner decisions 2026-10-08, SRS D17 to D20):
 - Gap within the criterion: proceed to Stage 1.
 - Moderate gap: report it, and decide whether the flagship is still worth building at that cost.
 - Large gap: treat as a negative result, publish it, and reconsider the architecture.
+- **Decided on 2026-10-11 (SRS D28):** large gap. The sliced arm is +10.8% on every seed (limit 5%), and local averaging alone costs about 6% (`RESULTS.md`, `results/task_b_gate_b.md`). Stage 0 is written up as a negative result (step 12), and the architecture is reconsidered before Stage 1.
 
 A negative result is still a deliverable. It should be written up with the same care as a positive one.
 

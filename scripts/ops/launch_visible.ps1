@@ -5,7 +5,7 @@
 .DESCRIPTION
   Integrates the parent CASSANDRA project's visible-terminal rule (ADR 0012):
   evidence-producing runs are started where they can be watched. The new window
-  opens at the repository root, optionally sets CHORUS_RUNS_DIR, runs
+  opens at the repository root, optionally sets CHORUS_RUNS_DIR and CHORUS_DATA_DIR, runs
   "python -m <Module> <Arguments>", and stays open with the exit code shown.
   Everything the window shows is also saved as a transcript (default:
   <RunsDir or repository>\launcher_logs\<time>_<module>.log), the equivalent of
@@ -22,6 +22,7 @@ param(
     [Parameter(Mandatory = $true)][string]$Module,
     [string]$Arguments = "",
     [string]$RunsDir = "",
+    [string]$DataDir = "",
     [string]$LogPath = ""
 )
 
@@ -49,6 +50,7 @@ $Lines.Add("Start-Transcript -LiteralPath " + (Quote $LogPath) + " | Out-Null")
 $Lines.Add("`$Host.UI.RawUI.WindowTitle = " + (Quote "Chorus: $Module"))
 $Lines.Add("Set-Location -LiteralPath " + (Quote $RepoRoot))
 if ($RunsDir -ne "") { $Lines.Add("`$env:CHORUS_RUNS_DIR = " + (Quote $RunsDir)) }
+if ($DataDir -ne "") { $Lines.Add("`$env:CHORUS_DATA_DIR = " + (Quote $DataDir)) }
 $Lines.Add("Write-Host ('[chorus] ' + (Get-Date -Format o) + ' start: python -m $Module ' + " + (Quote $Arguments) + ")")
 $Lines.Add("python -m $Module $Arguments")
 $Lines.Add("`$code = `$LASTEXITCODE")

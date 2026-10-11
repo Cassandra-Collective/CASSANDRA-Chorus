@@ -17,6 +17,7 @@ import os
 from pathlib import Path
 
 RUNS_DIR_ENV = "CHORUS_RUNS_DIR"
+DATA_DIR_ENV = "CHORUS_DATA_DIR"
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
@@ -26,3 +27,17 @@ def runs_root() -> Path:
     if value:
         return Path(value).expanduser()
     return REPO_ROOT / "runs"
+
+
+def data_root() -> Path:
+    """The folder that holds input corpora (Task B's text8). Read only; never created here.
+
+    From ``CHORUS_DATA_DIR``, else ``data/`` in the repository (gitignored). Like
+    the runs folder, it should sit outside OneDrive on the reference laptop
+    (``C:\\Users\\senso\\chorus-data``). The corpus's identity is fixed by the
+    SHA-256 in the run configuration, not by this location.
+    """
+    value = os.environ.get(DATA_DIR_ENV, "").strip()
+    if value:
+        return Path(value).expanduser()
+    return REPO_ROOT / "data"

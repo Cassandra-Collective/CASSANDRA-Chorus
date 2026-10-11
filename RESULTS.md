@@ -305,3 +305,241 @@ The owner decided to tell them apart before Task B. The reading was registered b
 - Bypassing two or three layers at once.
 - What layer-0 experts specialize in.
 - Other budgets and sizes, and Task B.
+
+## 2026-10-09 · PLAN step 10a: Task B timing pilot
+
+**Purpose.** Choose the Task B model size and compute budget (SRS D25) from measured step times, not estimates. Untrained models: these are times and memory only.
+
+**Setup.**
+
+- Three sizes, all with 6 layers, 8 experts per layer, k = 2 and context 256:
+  - 20,476,672 parameters (width 256);
+  - 31,985,600 (width 320);
+  - 46,050,432 (width 384).
+- Real text8 training batches of 32 and 64 windows; fp32, explicit attention, sparse dispatch.
+- Each worker mode is built with the code the runs will use. Median and minimum of 50 steps after 10 warm-up steps; each model's own peak GPU memory.
+- `python -m scripts.pilot_task_b_timing --config configs/task_b/pilot.toml`, commit `51b8a91`, clean tree. Run `20261009T044556Z_taskB-timing-pilot_s7` on the RTX 4070 Laptop GPU, 917 s, keep-awake held, no runtime warnings. Full table: `results/task_b_timing_pilot.md`.
+
+**Mains drop-outs during the pilot.** The Windows event log shows 25 drop-outs in 15 minutes, and 17 of the 24 measurements overlap at least one. Steps then stall for up to 2.6 s, which inflates the medians. The full-averaging worker does exactly the centralized model's work, yet their medians differ by up to 30% at 46M. The minima agree across modes, and at 46M they match the 212 ms measured in step 2. Both are therefore given below:
+
+- **Minimum:** the unthrottled cost.
+- **Median:** the cost on this laptop as it behaved today.
+
+**Milliseconds per step, batch 32 × 256, minimum / median:**
+
+| Parameters | Centralized | Sliced worker | Partial-update worker | Full-averaging worker | Peak memory, centralized |
+|---|---|---|---|---|---|
+| 20.5M | 128 / 149 | 109 / 116 | 127 / 145 | 131 / 147 | 2.1 GB |
+| 32.0M | 166 / 191 | 139 / 152 | 159 / 192 | 162 / 234 | 2.7 GB |
+| 46.1M | 212 / 405 | 184 / 215 | 202 / 247 | 220 / 310 | 3.4 GB |
+
+At batch 64 a step takes 1.6 to 1.9 times as long as at 32 (minima), and peak memory reaches 5.9 GB at 46M. A whole test-split evaluation (19,531 windows) takes 54 s, 64 s and 109 s for the three sizes. A merge of four worker results takes 0.07 to 0.13 s.
+
+**What this shows:**
+
+- **Any of the three sizes fits.** The largest uses 3.4 GB of the 8 GB at batch 32.
+- **A sliced worker is only somewhat faster than the full model per step** (13% to 15% at the minima). Sparse dispatch already does k = 2 experts' work per token whatever the worker holds. Slicing saves memory and upload size, not per-token compute.
+- **Projected hours for the 12-run matrix**, at batch 32, with a validation curve every 1,000 steps (every round in the simulated arms) and one test evaluation per run:
+
+| Parameters | 10,000 steps (82M characters) | 20,000 steps (164M characters) |
+|---|---|---|
+| 20.5M | 4.7 to 5.2 h | 9.2 to 10.3 h |
+| 32.0M | 6.3 to 7.5 h | 12.5 to 14.9 h |
+| 46.1M | 8.3 to 11.2 h | 16.1 to 22.1 h |
+
+The size and budget are the owner's decision (D25).
+
+**Not tested:**
+
+- Learning: no model was trained.
+- Mixed precision and fused attention (excluded by the owner).
+- Throughput under a stable mains supply.
+
+## 2026-10-09 · PLAN step 10b: Task B learning check
+
+**Purpose.** Before the 12-run matrix (D26), check that the chosen model learns text8 with Task A's optimizer.
+
+**Setup.** One centralized run, seed 7, 2,000 steps of 32 × 256 characters (16.4M characters):
+
+- The D26 configuration (`configs/task_b/centralized.toml`, 46,050,432 parameters, learning rate 0.001, decay over the last 20%), with `train.steps=2000`, `train.eval_every=250`.
+- Commit `85ea154`, clean tree; RTX 4070 Laptop GPU; run `20261009T050539Z_taskB-learncheck_s7`. Keep-awake held, no stalls, no runtime warnings.
+
+**Results.**
+
+| Step | 0 | 250 | 500 | 1,000 | 1,500 | 2,000 |
+|---|---|---|---|---|---|---|
+| Validation bits per character (first 1M characters) | 4.958 | 2.194 | 1.998 | 1.854 | 1.788 | 1.685 |
+
+Test bits per character, whole test split: **1.750**.
+
+**What this shows.**
+
+1. **The model learns text8 smoothly with these settings.** The loss stays finite, falls at every evaluation, and drops again during the final decay. For scale, the parent CASSANDRA model (201.6M parameters, 204.8M characters) reached 1.336. This run used 16.4M characters.
+2. **Without a balance loss, routing collapses onto a few experts per layer.**
+   - On the test split, 5 of 8 experts in layer 0 get under 0.025 of tokens. Layers 1 to 4 have 3 or 4 such experts each; layer 5 has 1.
+   - The collapse is already there at step 250 and does not recover.
+   - Task A, with the same zero balance coefficient, never showed this: its least-used expert never fell below 0.062.
+   - The centralized reference would then use only part of its experts, while the sliced arms are forced to spread tokens over each worker's held experts. That would confound the Task B comparison. The balance coefficient for Task B is put to the owner.
+3. **Training ran at 0.53 s per step**, against the timing pilot's 0.21 s unthrottled minimum. The mains adapter dropped out 98 times in 22 minutes (196 changes logged), about every 13 seconds. The battery still charged, from 55% to 63% over the first 11 minutes. At this pace a 20,000-step run takes about 3 hours, and the 12-run matrix about 36 hours.
+
+**Not tested:** any setting other than these; longer training; the simulated arms on text8 (tested on CPU only).
+
+**Re-check with the balance loss (D27), and a GPU check of the simulated arms.** Same settings, plus the Switch balance loss at 0.01.
+
+| Run | What | Result |
+|---|---|---|
+| `20261009T054243Z_taskB-learncheck-bal001_s7` | Centralized, 2,000 steps, commit `16f521d` | Validation 1.979, 1.844, 1.783, 1.680 at steps 500, 1,000, 1,500, 2,000; **test 1.743** (1.750 without the loss). No negligible expert in any layer at any evaluation. On the test split the least-used expert gets 0.125 to 0.229 of tokens per layer, against 0.000 to 0.003 without the loss. |
+| `20261009T053151Z_taskB-simcheck_s7` | Sliced arm at full size on the GPU, 2 rounds (1,000 worker steps), commit `16f521d` | Both rounds, merges, evaluations and 184 MB checkpoint writes completed; merged validation 2.919 then 2.567, test 2.602. No negligible expert (least-used share 0.066 to 0.181 per layer). |
+
+Both runs: keep-awake held, no stalls, no runtime warnings. Mains drop-outs continued (83 in the 21-minute re-check). Its steps took 0.44 s, which puts the 12-run matrix at about 30 to 36 hours.
+
+## 2026-10-09 · PLAN step 10b: Task B matrix, run 1 of 12 (parked after it)
+
+**Run 1, centralized, seed 7.**
+
+- Run `20261009T060425Z_taskB-central_s7`, commit `e0851aa`, clean tree, configuration `configs/task_b/centralized.toml` (D26, D27).
+- 20,000 steps, 163.8M characters, 2.47 h of training on the RTX 4070 Laptop GPU.
+
+| Step | 0 | 2,000 | 4,000 | 8,000 | 12,000 | 16,000 | 18,000 | 20,000 |
+|---|---|---|---|---|---|---|---|---|
+| Validation bits per character (first 1M characters) | 4.958 | 1.735 | 1.629 | 1.490 | 1.435 | 1.402 | 1.367 | 1.338 |
+
+- **Test bits per character, whole test split (4,999,936 characters): 1.4388.** This is the reference for S0-A-04 on seed 7. The validation figure covers a different, smaller set and is not a test estimate.
+- Every expert is used: the least-used gets 0.199 to 0.234 of tokens per layer on the test split.
+- Keep-awake held, no stalls, no standby, no runtime warnings. 395 mains drop-outs during the run.
+- At step 1,000 its validation figure (1.8444) equals the balance-loss re-check's to every printed digit. That run had the same seed and the same learning rate up to that step: a free determinism check.
+
+**Parked at the owner's request (2026-10-09).**
+
+- The queue runner was stopped while run 1 was training. Run 1 finished on its own; nothing started after it. Its queue log therefore has no finish entry for run 1; the run's own log is the record.
+- The remaining 11 runs (entries 2 to 12 of `configs/queues/task_b_matrix.toml`, unchanged) are in `C:\Users\senso\chorus-runs\queues\task_b_matrix_rest.toml`, verified identical, ready for the next session.
+
+**Run 2, sliced (Gate A main setting), seed 7.**
+
+- Run `20261009T194909Z_taskB-sliced-coverage_s7`, commit `bb20b0e` (differs from run 1's `e0851aa` in documentation only), clean tree.
+- 4 workers × 125 steps × 40 rounds = 20,000 worker steps, 163.8M characters, 2.21 h on the RTX 4070 Laptop GPU.
+
+| Round | 1 | 8 | 16 | 24 | 32 | 40 |
+|---|---|---|---|---|---|---|
+| Merged validation bits per character (first 1M characters) | 2.919 | 1.834 | 1.722 | 1.657 | 1.585 | 1.534 |
+
+- **Test bits per character: 1.6020**, against 1.4388 centralized on the same seed. Relative gap +11.3%, above S0-A-04's 5%.
+  - This is one seed of three; S0-A-06 needs every seed. The verdict waits for the matrix.
+  - It is not yet known whether the full-model and partial-update arms show the same gap.
+- Every expert is used: the least-used gets 0.104 to 0.192 of tokens per layer on the test split.
+- Keep-awake held, no stalls, no standby, no runtime warnings; 420 mains drop-outs.
+- The matrix resumed on 2026-10-09 at 22:49 local from `task_b_matrix_rest.toml`. `MUSAHIT_Nightly` was removed from the local preflight avoid list on 2026-10-10 (owner decision): its folder no longer exists, and the task fails at launch.
+
+**Run 3, partial update, seed 7.**
+
+- Run `20261009T220408Z_taskB-partial_s7`, commit `bb20b0e`, clean tree. Every worker holds all 8 experts and routes over them, but updates only its 4; router averaged over all workers (D21).
+- 20,000 worker steps, 163.8M characters, 2.38 h.
+
+| Round | 1 | 8 | 16 | 24 | 32 | 40 |
+|---|---|---|---|---|---|---|
+| Merged validation bits per character | 3.009 | 1.835 | 1.681 | 1.596 | 1.542 | 1.475 |
+
+- **Test bits per character: 1.5504**: +7.8% against centralized (1.4388), against +11.3% for the sliced arm on the same seed.
+- Every expert is used (least-used share 0.179 to 0.237 per layer).
+- Keep-awake held, no stalls, no runtime warnings; 431 mains drop-outs.
+
+**Second park (2026-10-10, owner request, before travel).**
+
+- **Mains outage.** During run 4 (full-model averaging, seed 7, `20261010T002852Z_taskB-fullavg_s7`), the battery ran down to 1%. Training froze from 01:37 to 03:30 UTC: the run logged one 6,822 s stall, and round 18 took 7,182 s instead of about 211 s. The owner restored power, and the run continued normally. Training is deterministic, so the stall changed wall-clock time only.
+- **Stopped at the owner's request after round 20 of 40** (queue runner first, then the run). Its checkpoint loads and resumes at round 21. The run's log has no end record; a resume appends a `resume` record, and the result equals an uninterrupted run (tested bitwise in `tests/test_task_b_scripts.py`).
+- **Next start.** `C:\Users\senso\chorus-runs\queues\task_b_matrix_resume2.toml`, verified:
+  - first `--resume` of run 4;
+  - then runs 5 to 12, entries 5 to 12 of `configs/queues/task_b_matrix.toml`, unchanged.
+
+  About 1.2 h for run 4, then about 9.6 h per seed.
+- **Done so far:** runs 1 to 3 (centralized, sliced and partial update on seed 7).
+
+| Seed 7, test bits per character | Centralized | Sliced | Partial update | Full-model averaging |
+|---|---|---|---|---|
+| Test bpc | 1.4388 | 1.6020 (+11.3%) | 1.5504 (+7.8%) | in progress, 20 of 40 rounds |
+
+## 2026-10-10 · PLAN step 10b: Task B matrix, runs 4 to 8 (seeds 7 and 11 complete)
+
+The queue resumed on 2026-10-10 at 08:39 UTC from `task_b_matrix_resume2.toml` (run 4 resumed at round 21, then runs 5 onward), with `stop_on_failure = false` because the owner was travelling and possibly offline. Every run exited with code 0 and recorded a completed end. Every run held keep-awake, with no runtime warnings and no stall, except the outage stall recorded for run 4's first segment. Clean tree at each start.
+
+| Run | Arm, seed | Run ID | Commit | Hours | Test bpc | Gap to centralized |
+|---|---|---|---|---|---|---|
+| 4 | Full-model averaging, 7 | `20261010T002852Z_taskB-fullavg_s7` | `1aba651` | 2.0 + 0.94 (resumed once) | 1.5300 | +6.3% |
+| 5 | Centralized, 11 | `20261010T093641Z_taskB-central_s11` | `df3a7ac` | 1.68 | 1.4386 | reference |
+| 6 | Sliced, 11 | `20261010T111737Z_taskB-sliced-coverage_s11` | `df3a7ac` | 1.68 | 1.5867 | +10.3% |
+| 7 | Partial update, 11 | `20261010T125827Z_taskB-partial_s11` | `df3a7ac` | 1.64 | 1.5474 | +7.6% |
+| 8 | Full-model averaging, 11 | `20261010T143649Z_taskB-fullavg_s11` | `df3a7ac` | 1.93 | 1.5242 | +5.9% |
+
+**Seeds 7 and 11, test bits per character** (relative gap to centralized with the same seed; S0-A-04 allows +5%):
+
+| Seed | Centralized | Sliced | Partial update | Full-model averaging |
+|---|---|---|---|---|
+| 7 | 1.4388 | 1.6020 (+11.3%) | 1.5504 (+7.8%) | 1.5300 (+6.3%) |
+| 11 | 1.4386 | 1.5867 (+10.3%) | 1.5474 (+7.6%) | 1.5242 (+5.9%) |
+
+**Observations so far** (two seeds of three; no verdict until seed 19):
+
+- **The two seeds agree closely.** Centralized differs by 0.0002 bits per character between them. Each arm's gap moves by at most 1 percentage point.
+- **Every simulated arm is above the 5% line on both seeds, including full-model averaging,** which involves no slicing at all. At this setting (H = 125, R = 40), local averaging alone costs about 6%.
+- **The arms keep the same order on both seeds:** full averaging, then partial update (about 1.5 to 1.7 points more), then sliced (about 2.7 to 3.5 points more again).
+  - This is the order Task A's routing-necessity results had.
+  - On text, restricting each worker's routing to its slice adds a cost in bits per character on top of local averaging.
+- **One negligible expert:** in run 6 (sliced, seed 11), expert 0 of layer 0 receives 0.011 of tokens on the test split, below the 0.025 line. Every other expert of the eight runs is above it.
+- **Speed:** runs 5 to 8 took about 1.6 to 1.9 h each, against 2.2 to 2.5 h before. Logged mains drop-outs fell to between 114 and 227 per run.
+- **Run 4's outage:** its first segment, stopped before the second park, wrote no power summary. Its 6,822 s outage stall is recorded as a `stall` record in its log.
+
+**Run 9, centralized, seed 19.** Run `20261010T163249Z_taskB-central_s19`, commit `df3a7ac`, clean tree, 1.96 h. Test bits per character **1.4353**: the seed 19 reference, within 0.0035 of seeds 7 and 11. Every expert used (least-used share 0.168); no stall, no warnings; 120 mains drop-outs.
+
+**Run 10, sliced, seed 19.** Run `20261010T183601Z_taskB-sliced-coverage_s19`, commit `dc23a78`, clean tree, 1.64 h. Test bits per character **1.5887**, **+10.7%** against centralized (1.4353). The sliced arm is now at +11.3%, +10.3% and +10.7% on seeds 7, 11 and 19. No negligible expert (least-used share 0.078); no stall, no warnings; 139 mains drop-outs.
+
+**Run 11, partial update, seed 19.** Run `20261010T201620Z_taskB-partial_s19`, commit `408a317`, clean tree, 1.63 h. Test bits per character **1.5408**, **+7.3%** against centralized; the partial-update arm is at +7.8%, +7.6% and +7.3% on seeds 7, 11 and 19. Every expert used (least-used share 0.157); no stall, no warnings; 107 mains drop-outs.
+
+**Run 12, full-model averaging, seed 19.** Run `20261010T215606Z_taskB-fullavg_s19`, commit `a871210`, clean tree. Test bits per character **1.5219**, **+6.0%**. Every expert used (least-used share 0.217); no runtime warnings.
+
+The laptop entered standby once during the run: training froze for 25,155 s (7.0 h), from 22:26 to 05:25 UTC, and the battery fell to 13%. It then continued and completed normally. Training is deterministic, so only the wall-clock time (8.8 h) changed. The queue ended at 06:43 UTC on 2026-10-11 with `queue_complete`, 0 failures.
+
+## 2026-10-11 · PLAN step 10c: Task B complete, the result for Decision gate B
+
+**Setup:**
+
+- 12 completed runs: four arms × seeds 7, 11 and 19, under D25, D26 and D27. The 46.1M model, 20,000 steps of 32 × 256 characters (163.8M characters) per run, balance loss 0.01. The simulated arms use 4 workers × 125 local steps × 40 rounds.
+- Report: `results/task_b_gate_b.md`, by `python -m scripts.analyze_task_b` at commit `ee2a7dd`, clean tree. It reads the run logs only.
+- Every run completed with a clean working tree; one resumed from its checkpoint (run 4).
+
+**S0-A-04 for the sliced arm: FAIL on every seed** (limit +5%; S0-A-06 needs every seed).
+
+| Arm | Seed 7 | Seed 11 | Seed 19 | Gap to centralized, mean (range) |
+|---|---|---|---|---|
+| Centralized | 1.4388 | 1.4386 | 1.4353 | reference |
+| Full-model averaging | 1.5300 | 1.5242 | 1.5219 | +6.1% (+5.9 to +6.3) |
+| Partial update | 1.5504 | 1.5474 | 1.5408 | +7.6% (+7.3 to +7.8) |
+| Sliced (Chorus) | 1.6020 | 1.5867 | 1.5887 | +10.8% (+10.3 to +11.3) |
+
+**Where the sliced arm's gap comes from.** Each step is measured by two arms that differ in one thing, as a percentage of centralized, and the three steps add up exactly:
+
+| Step | Arms compared | Mean (range) |
+|---|---|---|
+| Local averaging | full-model averaging vs centralized | +6.1% (+5.9 to +6.3) |
+| Partial updates | partial update vs full-model averaging | +1.4% (+1.3 to +1.6) |
+| Masked routing | sliced vs partial update | +3.2% (+2.7 to +3.6) |
+
+**What this shows (text8, this model size, budget and setting, three seeds):**
+
+1. **Sliced training is about 11% behind centralized, twice the 5% allowance, on every seed.** The seeds agree closely: centralized varies by 0.0035 bits per character across seeds, and each arm's gap by at most 1 percentage point. The ordering of the arms is identical on all three.
+2. **More than half of the gap is local averaging itself.** Full-model averaging, with no slicing, already costs about 6% at H = 125 local steps and R = 40 rounds. Every simulated arm shares this part, and the sweeps of PLAN step 11 (local steps, outer optimizer) target it. None of that has been tested on text.
+3. **Masked routing costs about 3 points on top, the largest step that is specific to slicing.** This is the text counterpart of the Gate A finding: routing restricted to the slice made experts interchangeable on Task A (D23), and on text it costs capacity, as D23 required Task B to show. Updating only part of the experts costs about 1.4 points.
+4. **Partial update, the closest published arm (SPES), lands at +7.6%. It is also over 5%, and it breaks Chorus's own goal**: every worker holds the whole model.
+5. **Expert usage held under the balance loss (D27).** One expert in one run (sliced, seed 11, layer 0) fell below 0.025 of tokens; every other expert of the 12 runs is above it.
+
+**Decision gate B (PLAN section 5).** "Gap within the criterion" does not apply. Whether +10.8% is a "moderate gap" (report it, and decide whether the flagship is still worth building at that cost) or a "large gap" (a negative result to publish, and the architecture to reconsider) is the owner's decision; PLAN does not define the boundary.
+
+**Operational record:**
+
+- Mains drop-outs throughout, and two outages that ran the battery low. Run 4 stalled 1.9 h; run 12 stalled 7.0 h in standby.
+- No result was affected, and no run was lost. One run resumed from its checkpoint; the queue continued unattended with `stop_on_failure = false`.
+
+**Not tested:**
+
+- Other local-step counts, outer optimizers, slice sizes or worker counts (PLAN step 11).
+- Router remedies, other model sizes and budgets, sliding-window evaluation.
+- Statistical tests beyond three seeds (the per-seed values are given).
