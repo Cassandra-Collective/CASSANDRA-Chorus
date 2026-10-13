@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft for the owner's review |
 | Date | 2026-10-13 |
-| Decisions | SRS section 9, D29 to D38 (owner, 2026-10-13) |
+| Decisions | SRS section 9, D29 to D41 (owner, 2026-10-13 and 2026-10-14) |
 | Replaces | Nothing yet. `docs/PLAN.md` remains the record of Stage 0. The SRS and PLAN are rewritten around this roadmap in step 1.4 |
 
 ## 1. Where we are
@@ -69,7 +69,7 @@ Time estimates are rough and assume one developer working with Claude; they will
 
 | Step | Deliverable | Notes |
 |---|---|---|
-| 1.1 | **System study: how volunteer training is coordinated with no server anyone runs, and what stays central in each design.** It evaluates two design families against D37 and D38: peer-to-peer discovery with group averaging, and public-host shared state with a merge any peer can compute and check | A brief first (`docs/research/2026-10-13-system-study-brief.md`), reviewed before launch; then an audited report like the literature investigation. Ends in a design recommendation for the owner (D35), including who may write shared state |
+| 1.1 | **System study: how volunteer training is coordinated with no server anyone runs, and what stays central in each design.** It evaluates two design families against D37 and D38: peer-to-peer discovery with group averaging, and public-host shared state with a merge any peer can compute and check | A brief first (`docs/research/2026-10-13-system-study-brief.md`), reviewed before launch; then an audited report like the literature investigation. Ends in a design recommendation for the owner (D35), including who may write shared state. **Done 2026-10-14:** `docs/research/2026-10-13-system-study-report.md`, audited; owner decisions D39 to D41 |
 | 1.2 | **Product spec:** the assistant's tasks, the sandbox and checker, the data policy, the tokenizer plan, model-size targets for local inference, safety rules (confirmation before actions; prompt injection inside emails) | |
 | 1.3 | **System architecture document** | Peer roles, the shared-state or peer protocol, discovery and bootstrap, connection relaying through our own machines, storage on public hosts, the merge rule, the holder-count rule, failure and churn handling, synchronous and asynchronous modes, versioning, the trust model for trusted participants |
 | 1.4 | **SRS and PLAN rewritten** around this roadmap | The Stage 1 to 3 outlines become requirements with acceptance criteria |
