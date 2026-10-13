@@ -5,7 +5,7 @@
 | PLAN step | 11 (sweeps), first batch; reopened after Stage 0's close-out as part of reconsidering the architecture (D28) |
 | Branch | `stage0/11-sweeps` |
 | SRS requirements | S0-F-23 (sweeps), S0-F-10 (outer optimizer), S0-F-20 (bits per character), S0-N-07 (state limits) |
-| Status | Analysis 1 implemented and verified (2026-10-13). Analysis 2, the code changes and the four runs are planned; the runs wait for the laptop's charger service (owner decision 2026-10-13) |
+| Status | Analysis 1 done; the four code changes and the re-scoring script implemented and tested (2026-10-13). Runs B1-1 to B1-5 deferred to the networked system (owner decision 2026-10-13); re-scoring not yet run |
 
 ## Problem / Motivation
 
@@ -141,6 +141,41 @@ All four keep everything else from the Stage 0 Task B configurations: model, dat
   With the existing analysis tests, 10 passed (Python 3.13.14 on the reference laptop, CPU).
 - **Run:** on the 12 Stage 0 Task B logs (`C:\Users\senso\chorus-runs`), the script paired all three seeds and 20 points per arm. The result and its reading are in `results/task_b_gap_curves.md` and the `RESULTS.md` entry of 2026-10-13.
 - **Spot check:** the per-seed rows were checked by hand against the logs' `eval` and `round` records for seed 7 at 2,000, 16,000 and 20,000 worker steps.
+
+**Code changes and re-scoring script, done 2026-10-13.**
+
+`tests/test_batch1.py` adds 17 tests. All passed on the reference laptop (CPU), with Python 3.13.14 and torch 2.12.1. They check:
+
+- **Accumulation:**
+  - with the balance loss off, four accumulated quarter batches leave the same clipped gradients as one full batch (relative tolerance 1e-4), with the same sequence and target counts and mean loss;
+  - with the balance loss on, the gradients differ, by less than 1% of the largest gradient.
+- **Per-step losses:** recorded only when asked, with one entry per step.
+- **Schedule check:** it refuses `grad_accum = 0`.
+- **Round plan:**
+  - unchanged without the decay phase;
+  - 72 rounds for 125 and 25, contiguous and summing to 5,000 steps;
+  - phases that do not divide are refused.
+- **Curve analysis:** reads the logged round steps.
+- **Sliding windows:**
+  - a stride equal to the context gives exactly the original result;
+  - strides 1, 4 and 8 score exactly the original characters, checked with a uniform model whose every position costs ln 27;
+  - a real model's score changes with more context;
+  - strides that do not divide the context are refused.
+- **End to end on the CPU with a tiny model:**
+  - centralized training with `grad_accum = 2` logs the effective batch and per-step losses;
+  - a simulated run with `decay_local_steps = 1` runs rounds of (0, 2), (2, 2), (4, 2), (6, 2), (8, 1) and (9, 1) with per-step losses for every worker;
+  - Task A refuses both Task B-only options.
+
+**Full suite:** 298 passed (CPU and GPU, 191 s). These are Stage 0's 277 plus the 4 curve-analysis tests and these 17.
+
+**Re-scoring script (18th test, added after that run).** It trains a tiny centralized run, re-scores it on the CPU with stride 4, and checks three things:
+- the recomputed original-protocol score matches the logged test value within 1e-6;
+- the sliding-window score differs from it;
+- a second call leaves the stored result unchanged.
+
+The five test files it touches pass: 66 tests, 161 s. The full suite was not re-run after this addition.
+
+**Owner decision, later on 2026-10-13:** the five runs are deferred. Long single-laptop experiments give way to building the networked system, where they will run in parallel as the first research pool (`docs/ROADMAP.md`, once written). The re-scoring script (`scripts/rescore_task_b.py`) is ready and has not been run on the real models.
 
 **Still planned:**
 

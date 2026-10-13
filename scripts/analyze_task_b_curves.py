@@ -35,13 +35,22 @@ def centralized_curve(recs: list[dict]) -> dict[int, float]:
 def simulated_curve(recs: list[dict]) -> dict[int, float]:
     """``{total worker steps: validation bpc of the merged model}`` from a simulated run's ``round`` records.
 
-    Total worker steps after round r is ``n_workers x local_steps x (r + 1)``, read from the run's header.
+    Total worker steps after a round is ``n_workers x (start_step + local_steps)`` when the round record
+    gives them (runs with a round plan), else ``n_workers x local_steps x (r + 1)`` from the header.
     """
     header = next(r for r in recs if r.get("type") == "header")
     sim = header["config"]["sim"]
-    per_round = int(sim["n_workers"]) * int(sim["local_steps"])
-    return {per_round * (int(r["round"]) + 1): float(r["bpc"])
-            for r in recs if r.get("type") == "round" and "bpc" in r}
+    workers, local_steps = int(sim["n_workers"]), int(sim["local_steps"])
+    curve = {}
+    for r in recs:
+        if r.get("type") != "round" or "bpc" not in r:
+            continue
+        if "start_step" in r and "local_steps" in r:
+            done = int(r["start_step"]) + int(r["local_steps"])
+        else:
+            done = local_steps * (int(r["round"]) + 1)
+        curve[workers * done] = float(r["bpc"])
+    return curve
 
 
 def pair(central: dict[int, float], arms: dict[str, dict[int, float]]) -> list[dict]:

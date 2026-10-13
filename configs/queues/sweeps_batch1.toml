@@ -1,0 +1,38 @@
+# PLAN step 11, batch 1 (docs/implementations/2026-10-13-averaging-gap-batch-1.md; owner decisions 2026-10-13).
+# Five seed-7 runs against the Stage 0 Task B results; about 11 to 13 hours in all on the reference laptop.
+# Every run records per-step losses (optim.log_step_losses) so loss jumps after each AdamW reset can be seen.
+# Run names differ from the Stage 0 matrix, so scripts/analyze_task_b.py never mixes them in.
+stop_on_failure = true
+
+# B1-1: centralized, batch 128 (4 x 32 accumulated), 5,000 steps: the same-step data-parallel reference.
+[[run]]
+module = "scripts.train_task_b_centralized"
+args = ["--config", "configs/task_b/centralized.toml", "--set", "run.seed=7", "--set", "run.name=taskB-central-b128-5k",
+        "--set", "optim.grad_accum=4", "--set", "train.steps=5000", "--set", "optim.log_step_losses=true"]
+
+# B1-2: centralized, batch 32, 5,000 steps: one worker training alone.
+[[run]]
+module = "scripts.train_task_b_centralized"
+args = ["--config", "configs/task_b/centralized.toml", "--set", "run.seed=7", "--set", "run.name=taskB-central-b32-5k",
+        "--set", "train.steps=5000", "--set", "optim.log_step_losses=true"]
+
+# B1-3: full-model averaging, H = 125, DiLoCo's Nesterov outer step (lr 0.7, momentum 0.9).
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7", "--set", "run.name=taskB-fullavg-nesterov",
+        "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "sim.outer=nesterov",
+        "--set", "sim.outer_lr=0.7", "--set", "sim.outer_momentum=0.9", "--set", "optim.log_step_losses=true"]
+
+# B1-4: full-model averaging, H = 125, plain outer step of 1.6 (Nesterov with momentum 0).
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7", "--set", "run.name=taskB-fullavg-outer16",
+        "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "sim.outer=nesterov",
+        "--set", "sim.outer_lr=1.6", "--set", "sim.outer_momentum=0.0", "--set", "optim.log_step_losses=true"]
+
+# B1-5: full-model averaging, H = 125 until the learning-rate decay (worker step 4,000), then H = 25: 72 rounds.
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/sliced.toml", "--set", "run.seed=7", "--set", "run.name=taskB-fullavg-decayH25",
+        "--set", "sim.mode=full", "--set", "sim.router_rule=all", "--set", "sim.decay_local_steps=25",
+        "--set", "optim.log_step_losses=true"]

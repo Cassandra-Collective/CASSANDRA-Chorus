@@ -82,6 +82,10 @@ def check(cfg: SlicedTaskAConfig, task: TaskA) -> None:
         problems.append(f"model.vocab_size is {cfg.model.vocab_size} but Task A needs {task.vocab_size}")
     if cfg.model.context_length != cfg.task_a.seq_len:
         problems.append(f"model.context_length is {cfg.model.context_length} but task_a.seq_len is {cfg.task_a.seq_len}")
+    if cfg.sim.decay_local_steps != 0:
+        problems.append("sim.decay_local_steps is only supported on Task B (scripts/train_task_b_sliced.py)")
+    if cfg.optim.grad_accum != 1:
+        problems.append("optim.grad_accum is only supported on Task B")
     for check_fn in (lambda: validate_sim(cfg.sim, cfg.model.n_experts, cfg.model.top_k),
                      lambda: check_schedule(cfg.optim, cfg.sim.rounds * cfg.sim.local_steps)):
         try:

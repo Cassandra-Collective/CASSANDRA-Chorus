@@ -39,13 +39,14 @@ from cassandra_chorus.sim import (
     dropped_workers,
     load_checkpoint,
     make_outer,
+    round_plan,
     round_slices,
     save_checkpoint,
     train_worker,
     validate_sim,
     worker_specs,
 )
-from cassandra_chorus.train import OptimSection, check_schedule
+from cassandra_chorus.train import OptimSection, check_schedule, decay_start
 
 
 @dataclasses.dataclass(frozen=True)
@@ -79,13 +80,20 @@ def check(cfg: SlicedTaskBConfig, data: Text8) -> None:
     if cfg.eval.curve_max_chars <= cfg.text8.context_length:
         problems.append("eval.curve_max_chars must be longer than one window")
     for check_fn in (lambda: validate_sim(cfg.sim, cfg.model.n_experts, cfg.model.top_k),
-                     lambda: check_schedule(cfg.optim, cfg.sim.rounds * cfg.sim.local_steps)):
+                     lambda: check_schedule(cfg.optim, cfg.sim.rounds * cfg.sim.local_steps),
+                     lambda: plan_rounds(cfg)):
         try:
             check_fn()
         except ValueError as exc:
             problems.append(str(exc))
     if problems:
         raise ValueError("inconsistent configuration: " + "; ".join(problems))
+
+
+def plan_rounds(cfg: SlicedTaskBConfig) -> list[tuple[int, int]]:
+    """``(first worker step, local steps)`` of every round; the decay starts where the schedule's decay does."""
+    trajectory = cfg.sim.rounds * cfg.sim.local_steps
+    return round_plan(cfg.sim, decay_start(cfg.optim, trajectory))
 
 
 def full_model(cfg: SlicedTaskBConfig, state, device) -> MoETransformer:
@@ -118,7 +126,9 @@ def main(argv: list[str] | None = None) -> int:
     if device.type == "cuda" and not torch.cuda.is_available():
         raise RuntimeError("the configuration asks for 'cuda' but CUDA is not available")
     total_steps = sim.n_workers * sim.local_steps * sim.rounds
-    characters_per_step = cfg.optim.batch_size * cfg.text8.context_length
+    characters_per_step = cfg.optim.batch_size * cfg.optim.grad_accum * cfg.text8.context_length
+    plan = plan_rounds(cfg)
+    trajectory = sim.rounds * sim.local_steps
     ops_settings, ops_source = load_ops_settings()
     checks = run_preflight(ops_settings, paths.runs_root() if args.resume is None else args.resume,
                            expected_seconds=total_steps * ops_settings.seconds_per_step)
@@ -150,7 +160,8 @@ def main(argv: list[str] | None = None) -> int:
     with log:
         try:
             with operations(log, ops_settings, ops_source, checks), log.capture_warnings():
-                for r in range(start_round, sim.rounds):
+                for r in range(start_round, len(plan)):
+                    first_step, local_steps = plan[r]
                     t0 = time.perf_counter()
                     slices = round_slices(sim, n_layers, n_experts, top_k, r, cfg.run.seed)
                     dropped = dropped_workers(sim, r, cfg.run.seed)
@@ -166,7 +177,7 @@ def main(argv: list[str] | None = None) -> int:
                             return data.sample(batch_size, generator)
 
                         wr = train_worker(cfg.model, cfg.optim, global_state, slices[spec.name], sim.mode, next_batch,
-                                          r, sim.local_steps, sim.rounds * sim.local_steps, device)
+                                          r, local_steps, trajectory, device, start_step=first_step)
                         workers.append({"worker": spec.name, "dropped": False, "held": held,
                                         "train": dataclasses.asdict(wr.stats)})
                         results.append(WorkerResult(slices[spec.name], wr.state, wr.stats.sequences))
@@ -175,19 +186,19 @@ def main(argv: list[str] | None = None) -> int:
                     merged = evaluate_bpc(full_model(cfg, global_state, device), data, "valid", device,
                                           max_chars=cfg.eval.curve_max_chars)
                     seconds = time.perf_counter() - t0
-                    log.write("round", round=r, seconds=seconds, dropped=dropped, workers=workers,
-                              merge=dataclasses.asdict(report), **merged)
+                    log.write("round", round=r, start_step=first_step, local_steps=local_steps, seconds=seconds,
+                              dropped=dropped, workers=workers, merge=dataclasses.asdict(report), **merged)
                     save_checkpoint(log.run_dir, r, global_state, outer, chash)
-                    print(f"round {r + 1:3d}/{sim.rounds}  merged validation bpc {merged['bpc']:.4f}  "
+                    print(f"round {r + 1:3d}/{len(plan)}  merged validation bpc {merged['bpc']:.4f}  "
                           f"dropped {len(dropped)}  ({seconds:.0f}s)", flush=True)
-                    if args.stop_after_round is not None and r >= args.stop_after_round and r < sim.rounds - 1:
+                    if args.stop_after_round is not None and r >= args.stop_after_round and r < len(plan) - 1:
                         raise StopAfterRound(r)
 
                 model = full_model(cfg, global_state, device)
                 test = evaluate_bpc(model, data, "test", device)
                 if cfg.eval.save_model:
                     torch.save(model.state_dict(), log.run_dir / "final_model.pt")
-                log.write("final", rounds=sim.rounds, worker_steps=total_steps,
+                log.write("final", rounds=len(plan), worker_steps=total_steps,
                           characters=total_steps * characters_per_step, test=test,
                           model_file="final_model.pt" if cfg.eval.save_model else None)
         except StopAfterRound as stop:

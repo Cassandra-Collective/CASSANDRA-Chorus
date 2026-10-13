@@ -41,6 +41,7 @@ class SimSection:
     drop_prob: float = 0.0
     skew: float = 0.0
     equal_compute_steps: int = 5000
+    decay_local_steps: int = 0  # local steps per round once the learning-rate decay starts; 0 keeps local_steps
 
 
 def worker_specs(sim: SimSection) -> list[WorkerSpec]:
@@ -66,8 +67,31 @@ def validate_sim(sim: SimSection, n_experts: int, top_k: int) -> None:
             problems.append(f"capacities {bad} outside [top_k={top_k}, n_experts={n_experts}]")
     if not 0.0 <= sim.drop_prob <= 1.0 or not 0.0 <= sim.skew <= 1.0:
         problems.append("drop_prob and skew must be in [0, 1]")
+    if sim.decay_local_steps < 0:
+        problems.append("decay_local_steps must be 0 (off) or positive")
     if problems:
         raise ValueError("invalid simulation configuration: " + "; ".join(problems))
+
+
+def round_plan(sim: SimSection, decay_start_step: int) -> list[tuple[int, int]]:
+    """``(first worker step, local steps)`` of every round, in order. No side effects.
+
+    Each worker's trajectory has ``rounds x local_steps`` steps (equal compute, D17). Without
+    ``decay_local_steps`` every round has ``local_steps``. With it, rounds have ``local_steps``
+    until the trajectory reaches ``decay_start_step`` and ``decay_local_steps`` from there to
+    the end, so workers synchronize more often during the final learning-rate decay at the same
+    total compute. Raises ``ValueError`` if either phase does not divide into whole rounds.
+    """
+    total = sim.rounds * sim.local_steps
+    if sim.decay_local_steps <= 0:
+        return [(r * sim.local_steps, sim.local_steps) for r in range(sim.rounds)]
+    if not 0 <= decay_start_step <= total:
+        raise ValueError(f"decay start {decay_start_step} lies outside the {total}-step trajectory")
+    if decay_start_step % sim.local_steps or (total - decay_start_step) % sim.decay_local_steps:
+        raise ValueError(f"cannot split {decay_start_step} steps into rounds of {sim.local_steps} and the "
+                         f"remaining {total - decay_start_step} into rounds of {sim.decay_local_steps}")
+    return ([(s, sim.local_steps) for s in range(0, decay_start_step, sim.local_steps)]
+            + [(s, sim.decay_local_steps) for s in range(decay_start_step, total, sim.decay_local_steps)])
 
 
 def round_slices(sim: SimSection, n_layers: int, n_experts: int, top_k: int, round_index: int, seed: int) -> dict[str, Slice]:

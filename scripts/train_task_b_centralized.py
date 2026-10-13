@@ -92,13 +92,14 @@ def main(argv: list[str] | None = None) -> int:
         seeds["train_data"] = repro.derive_seed(cfg.run.seed, "task_b/train")
         determinism = repro.apply_determinism(cfg.run.determinism)
         model = MoETransformer(cfg.model).to(device)
+        batch_size = cfg.optim.batch_size
+        characters_per_step = batch_size * cfg.optim.grad_accum * cfg.text8.context_length
         log.write_header(config=cfg, config_path=args.config, seeds=seeds,
                          environment=repro.environment_info(), determinism=determinism)
         log.write("setup", parameters=count_parameters(model), vocab_size=data.vocab_size,
                   text8_path=str(data.path), text8_sha256=cfg.text8.sha256,
-                  characters_per_step=cfg.optim.batch_size * cfg.text8.context_length)
+                  characters_per_step=characters_per_step)
         generator = torch.Generator().manual_seed(seeds["train_data"])
-        batch_size = cfg.optim.batch_size
 
         def next_batch():
             return data.sample(batch_size, generator)
@@ -122,14 +123,14 @@ def main(argv: list[str] | None = None) -> int:
                 train_seconds += time.perf_counter() - t0
                 step += n
                 result = curve()
-                log.write("eval", step=step, characters=step * batch_size * cfg.text8.context_length,
+                log.write("eval", step=step, characters=step * characters_per_step,
                           train=dataclasses.asdict(stats), train_seconds=train_seconds, **result)
                 print(f"step {step:6d}  train ce {stats.mean_ce_loss:.4f}  validation bpc {result['bpc']:.4f}  "
                       f"({train_seconds:.0f}s)", flush=True)
             test = evaluate_bpc(model, data, "test", device)
             if cfg.train.save_model:
                 torch.save(model.state_dict(), log.run_dir / "final_model.pt")
-            log.write("final", step=step, characters=step * batch_size * cfg.text8.context_length,
+            log.write("final", step=step, characters=step * characters_per_step,
                       train_seconds=train_seconds, test=test,
                       model_file="final_model.pt" if cfg.train.save_model else None)
 

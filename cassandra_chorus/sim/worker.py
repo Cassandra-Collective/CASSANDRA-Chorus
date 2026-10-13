@@ -80,17 +80,20 @@ def train_worker(
     local_steps: int,
     total_local_steps: int,
     device: torch.device | str,
+    start_step: int | None = None,
 ) -> WorkerRound:
     """Train one worker for ``local_steps`` steps of its trajectory.
 
     The learning-rate schedule runs over the worker's whole trajectory: this
-    round's steps are ``round_index * local_steps`` onward, out of
+    round's steps are ``start_step`` onward (by default ``round_index *
+    local_steps``, which holds when every round has the same length), out of
     ``total_local_steps`` (owner-confirmed 2026-10-08). The optimizer is fresh.
     """
     model = build_worker_model(cfg, global_state, slice_, mode, device)
     optimizer = make_optimizer(model, optim)
     stats = train_steps(
         model, optimizer, next_batch, local_steps, optim, device,
-        start_step=round_index * local_steps, total_steps=total_local_steps,
+        start_step=round_index * local_steps if start_step is None else start_step,
+        total_steps=total_local_steps,
     )
     return WorkerRound(model=model, state=returned_state(model, slice_, mode), stats=stats)

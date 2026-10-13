@@ -28,6 +28,13 @@ class OptimSection:
     ``decay_fraction`` is the final share of the run over which the learning
     rate falls linearly to ``final_lr_ratio * lr``; 0 means no decay. Task A
     configurations set 0.2 (owner decision 2026-10-07).
+
+    ``grad_accum`` draws that many batches of ``batch_size`` per optimizer step
+    and averages their gradients (an effective batch of ``batch_size x
+    grad_accum``); 1, the default, is the original single-batch path.
+    ``log_step_losses`` records every optimizer step's loss in
+    :class:`TrainStats`; it is a logging switch, kept here because every
+    training path receives this section.
     """
 
     lr: float = 1e-3
@@ -40,11 +47,17 @@ class OptimSection:
     batch_size: int = 64
     decay_fraction: float = 0.0
     final_lr_ratio: float = 0.1
+    grad_accum: int = 1
+    log_step_losses: bool = False
 
 
 @dataclasses.dataclass
 class TrainStats:
-    """What a call to :func:`train_steps` processed. Losses are means over its steps."""
+    """What a call to :func:`train_steps` processed. Losses are means over its steps.
+
+    ``step_losses`` holds each optimizer step's loss when ``OptimSection.log_step_losses``
+    is set, and is ``None`` otherwise.
+    """
 
     steps: int = 0
     sequences: int = 0
@@ -52,6 +65,7 @@ class TrainStats:
     mean_loss: float = float("nan")
     mean_ce_loss: float = float("nan")
     mean_balance_loss: float = float("nan")
+    step_losses: list[float] | None = None
 
 
 def make_optimizer(model: nn.Module, cfg: OptimSection) -> torch.optim.AdamW:
@@ -71,6 +85,8 @@ def check_schedule(cfg: OptimSection, total_steps: int) -> None:
         raise ValueError("decay_fraction must be in [0, 1]")
     if not 0.0 <= cfg.final_lr_ratio <= 1.0:
         raise ValueError("final_lr_ratio must be in [0, 1]")
+    if cfg.grad_accum < 1:
+        raise ValueError("grad_accum must be at least 1")
     if cfg.decay_fraction > 0 and decay_start(cfg, total_steps) < cfg.warmup_steps:
         raise ValueError(
             f"the final decay would start at step {decay_start(cfg, total_steps)}, before warm-up ends "
@@ -113,33 +129,59 @@ def train_steps(
     ``start_step + i``, compute the model's ``loss`` (cross-entropy plus the
     weighted balance loss) on the next batch, backpropagate, clip the global
     gradient norm to ``grad_clip`` (if positive) and step the optimizer.
+    With ``grad_accum = k > 1`` a step draws k batches and backpropagates each
+    loss divided by k before the single clip and optimizer step; the step's
+    losses are then means over its k batches.
     Side effects: updates the model's parameters and the optimizer state.
     Raises ``FloatingPointError`` on a non-finite loss rather than continuing.
     """
     model.train()
-    stats = TrainStats()
+    stats = TrainStats(step_losses=[] if cfg.log_step_losses else None)
     loss_sum = 0.0
     ce_sum = balance_sum = scored = torch.zeros((), device=device)  # accumulated on the device
     for i in range(n_steps):
         for group in optimizer.param_groups:
             group["lr"] = lr_at(start_step + i, cfg, total_steps)
-        inputs, targets = next_batch()
-        inputs, targets = inputs.to(device), targets.to(device)
-        out = model(inputs, targets=targets, expert_mask=expert_mask)
-        loss_value = out.loss.item()  # the one host synchronization per step
-        if not math.isfinite(loss_value):
-            raise FloatingPointError(f"non-finite loss {loss_value} at step {start_step + i}")
-        optimizer.zero_grad(set_to_none=True)
-        out.loss.backward()
+        if cfg.grad_accum == 1:  # the original path, kept exactly
+            inputs, targets = next_batch()
+            inputs, targets = inputs.to(device), targets.to(device)
+            out = model(inputs, targets=targets, expert_mask=expert_mask)
+            loss_value = out.loss.item()  # the one host synchronization per step
+            if not math.isfinite(loss_value):
+                raise FloatingPointError(f"non-finite loss {loss_value} at step {start_step + i}")
+            optimizer.zero_grad(set_to_none=True)
+            out.loss.backward()
+            sequences = inputs.shape[0]
+            ce_step, balance_step = out.ce_loss.detach(), out.balance_loss.detach()
+            scored_step = (targets != -100).sum()
+        else:
+            optimizer.zero_grad(set_to_none=True)
+            loss_value, sequences = 0.0, 0
+            ce_step = balance_step = scored_step = torch.zeros((), device=device)
+            for _ in range(cfg.grad_accum):
+                inputs, targets = next_batch()
+                inputs, targets = inputs.to(device), targets.to(device)
+                out = model(inputs, targets=targets, expert_mask=expert_mask)
+                part = out.loss.item()
+                if not math.isfinite(part):
+                    raise FloatingPointError(f"non-finite loss {part} at step {start_step + i}")
+                (out.loss / cfg.grad_accum).backward()
+                loss_value += part / cfg.grad_accum
+                sequences += inputs.shape[0]
+                ce_step = ce_step + out.ce_loss.detach() / cfg.grad_accum
+                balance_step = balance_step + out.balance_loss.detach() / cfg.grad_accum
+                scored_step = scored_step + (targets != -100).sum()
         if cfg.grad_clip > 0:
             nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
         optimizer.step()
         stats.steps += 1
-        stats.sequences += inputs.shape[0]
+        stats.sequences += sequences
         loss_sum += loss_value
-        ce_sum = ce_sum + out.ce_loss.detach()
-        balance_sum = balance_sum + out.balance_loss.detach()
-        scored = scored + (targets != -100).sum()
+        if stats.step_losses is not None:
+            stats.step_losses.append(loss_value)
+        ce_sum = ce_sum + ce_step
+        balance_sum = balance_sum + balance_step
+        scored = scored + scored_step
     if stats.steps:
         stats.mean_loss = loss_sum / stats.steps
         stats.mean_ce_loss = ce_sum.item() / stats.steps

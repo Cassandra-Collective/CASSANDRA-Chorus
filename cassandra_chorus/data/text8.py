@@ -102,3 +102,13 @@ class Text8:
         offsets = start + (first + torch.arange(count)).unsqueeze(1) * length
         windows = self.data[offsets + torch.arange(length + 1)].long()
         return windows[:, :-1], windows[:, 1:]
+
+    def strided_windows(self, split: str, first: int, count: int, stride: int) -> tuple[torch.Tensor, torch.Tensor]:
+        """Windows ``first`` to ``first + count - 1`` starting every ``stride`` characters: window w reads
+        characters start + w*stride to start + w*stride + L - 1 and predicts the L characters one place later.
+        With ``stride = L`` these are exactly :meth:`eval_windows`."""
+        start, _ = self.bounds(split)
+        length = self.cfg.context_length
+        offsets = start + (first + torch.arange(count)).unsqueeze(1) * stride
+        windows = self.data[offsets + torch.arange(length + 1)].long()
+        return windows[:, :-1], windows[:, 1:]
