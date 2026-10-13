@@ -23,7 +23,8 @@ The product target is now a local assistant trained from scratch by Chorus (owne
 
 ## Scope (owner decisions, 2026-10-13)
 
-- **Batch 1 only:** the analyses below, two centralized baselines and two outer optimizers. Whether to run the H sweep and the keep-against-reset AdamW comparison is decided after seeing these.
+- **Batch 1 only:** the analyses below, two centralized baselines, two outer optimizers, and (added by the owner after analysis 1) one run that synchronizes more often during the final learning-rate decay. Whether to run the H sweep and the keep-against-reset AdamW comparison is decided after seeing these.
+- **Re-scoring (analysis 2) runs on an evening session**, not during the day (owner, 2026-10-13).
 - **Seed 7 only** for the runs in this batch.
 - **No long training runs until the laptop's charger or battery handover is serviced** (`docs/stage0-closeout.md` §3.2). Analyses of existing logs, code changes and tests can proceed now.
 
@@ -37,7 +38,13 @@ The product target is now a local assistant trained from scratch by Chorus (owne
 | `scripts/rescore_task_b.py` | New. Re-scores saved Task B models on the test split with sliding windows. |
 | `results/task_b_rescore.md` | New. Non-overlapping and sliding-window bits per character for the 12 saved Task B models, and the gaps under both. |
 | `cassandra_chorus/train/loop.py` | Adds `OptimSection.grad_accum` (default 1, today's behaviour) and an optional per-step loss record in `TrainStats`. |
-| `scripts/train_task_b_centralized.py`, `cassandra_chorus/sim/worker.py` | Pass the per-step loss option through and write it to the run log when enabled. |
+| `scripts/train_task_b_centralized.py` | Counts characters per step as `batch_size × grad_accum × context`, so accumulation runs log the right data volume. |
+| `cassandra_chorus/sim/harness.py` | Adds `SimSection.decay_local_steps` and `round_plan`. |
+| `cassandra_chorus/sim/worker.py` | `train_worker` takes an optional explicit start step. |
+| `scripts/train_task_b_sliced.py` | Runs the rounds of `round_plan`, and logs each round's `start_step` and `local_steps`. |
+| `scripts/train_task_a_sliced.py` | Refuses `decay_local_steps` other than 0. |
+| `scripts/analyze_task_b_curves.py` | Uses the logged `start_step` and `local_steps` when present. |
+| `cassandra_chorus/data/text8.py` | Adds windows at a given stride, for sliding-window scoring. |
 | `configs/queues/sweeps_batch1.toml` | New. The four runs of this batch as overrides of the existing Task B configurations. |
 | `tests/` | New tests for accumulation, sliding-window scoring and the curve pairing. |
 | `RESULTS.md` | One entry per completed analysis and run. |
@@ -66,7 +73,23 @@ The product target is now a local assistant trained from scratch by Chorus (owne
 - **Default:** `grad_accum = 1` keeps the current code path exactly, so existing runs stay reproducible bit for bit.
 - **Why it is needed:** batch 128 does not fit in 8 GB. The timing pilot measured 5,945 MiB at batch 64.
 
-**Code change 2: per-step losses.** An option records each optimizer step's loss in `TrainStats`, and the run log stores them. It is off by default. Future runs can then show whether loss jumps after each AdamW reset, which the current per-round logs cannot show.
+**Code change 2: per-step losses.** `OptimSection.log_step_losses` (default off) makes `train_steps` record each optimizer step's loss in `TrainStats.step_losses`, which the run logs already store with the rest of the statistics. It is a logging switch kept in the optimizer section because every training path receives that section. Future runs can then show whether loss jumps after each AdamW reset; the current per-round logs cannot.
+
+**Code change 3: a shorter H during the decay (for B1-5).**
+
+- **Setting:** `SimSection.decay_local_steps` (default 0, meaning off).
+- **Round plan:** a new function `round_plan` lays out every round as (first worker step, number of steps). Rounds use `local_steps` until the worker trajectory reaches the decay start (step 4,000 of 5,000), then `decay_local_steps`. With 125 and 25 that is 32 + 40 = 72 rounds, at the same total compute.
+- **Validation:** the plan raises an error if the decay start is not a multiple of `local_steps`, or the decay length not a multiple of `decay_local_steps`.
+- **Worker:** `train_worker` gains an optional explicit start step, so the learning-rate schedule follows the trajectory exactly. Its default (round × H) keeps every existing run unchanged.
+- **Logs:** round records add `start_step` and `local_steps`. The curve analysis uses them when present and the old formula otherwise.
+- **Task A:** its script refuses a nonzero `decay_local_steps` rather than ignoring it.
+
+**Code change 4: sliding-window scoring.**
+
+- **API:** `evaluate_bpc(..., stride=None)` keeps the current protocol. A stride S that divides the context length L uses windows starting every S characters: the first scores all L positions, each later one only its last S.
+- **Same characters:** this scores exactly the characters the current protocol scores, from the split's second character to n × L, where n is the current number of windows. So the two protocols differ only in context.
+- **Expert counts:** not returned in this mode, because the forward pass also routes unscored positions.
+- **Script:** `scripts/rescore_task_b.py` loads each saved model and its configuration and writes both scores.
 
 **The four runs** (seed 7, after the laptop is serviced):
 
@@ -76,6 +99,7 @@ The product target is now a local assistant trained from scratch by Chorus (owne
 | B1-2 | Centralized, batch 32, 5,000 steps | `train.steps=5000` | The one-worker floor: a worker training alone on a quarter of the data |
 | B1-3 | Full averaging, H = 125, Nesterov outer step | `sim.outer=nesterov`, `sim.outer_lr=0.7`, `sim.outer_momentum=0.9` | Whether DiLoCo's outer step recovers part of the 6.1% |
 | B1-4 | Full averaging, H = 125, plain step larger than averaging | `sim.outer=nesterov`, `sim.outer_lr=1.6`, `sim.outer_momentum=0` | Whether a larger outer step without momentum helps |
+| B1-5 | Full averaging, H = 125 until the decay, then H = 25 | `sim.decay_local_steps=25` | Whether the gap's widening during the decay (analysis 1) comes from how rarely workers synchronize there |
 
 All four keep everything else from the Stage 0 Task B configurations: model, data, schedule shape, seed and evaluation.
 
