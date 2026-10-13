@@ -5,7 +5,7 @@
 | PLAN step | 11 (sweeps), first batch; reopened after Stage 0's close-out as part of reconsidering the architecture (D28) |
 | Branch | `stage0/11-sweeps` |
 | SRS requirements | S0-F-23 (sweeps), S0-F-10 (outer optimizer), S0-F-20 (bits per character), S0-N-07 (state limits) |
-| Status | Planned. Code and analyses not started. Training runs wait for the laptop's charger service (owner decision 2026-10-13) |
+| Status | Analysis 1 implemented and verified (2026-10-13). Analysis 2, the code changes and the four runs are planned; the runs wait for the laptop's charger service (owner decision 2026-10-13) |
 
 ## Problem / Motivation
 
@@ -105,7 +105,20 @@ All four keep everything else from the Stage 0 Task B configurations: model, dat
 - **The learning rate of B1-1 stays at 1e-3.** A larger batch often warrants a higher learning rate, so B1-1 may understate what data parallel can reach. Tuning it would need several runs. That is a stated limitation, not a decision to settle now.
 - **Stride 64 for re-scoring.** Stride 1 would score every character with exactly 255 characters of context, at about 256× the current cost (about 8 hours per model). Stride 64 keeps 75% or more of the context for every character at 4× the cost.
 
-## Verification (planned)
+## Verification
+
+**Analysis 1, done 2026-10-13.**
+
+- **Tests:** `tests/test_analyze_task_b_curves.py` (4 tests) checks:
+  - the step count after each round (`n_workers × local_steps × (r + 1)`);
+  - the pairing at equal compute, skipping step 0 and unmatched steps;
+  - the mean, minimum and maximum over seeds, end to end through `main`.
+
+  With the existing analysis tests, 10 passed (Python 3.13.14 on the reference laptop, CPU).
+- **Run:** on the 12 Stage 0 Task B logs (`C:\Users\senso\chorus-runs`), the script paired all three seeds and 20 points per arm. The result and its reading are in `results/task_b_gap_curves.md` and the `RESULTS.md` entry of 2026-10-13.
+- **Spot check:** the per-seed rows were checked by hand against the logs' `eval` and `round` records for seed 7 at 2,000, 16,000 and 20,000 worker steps.
+
+**Still planned:**
 
 - **Accumulation, `grad_accum = 1`:** a fixed seed reproduces an existing short run bit for bit (CPU and CUDA).
 - **Accumulation, `grad_accum = 4`:**

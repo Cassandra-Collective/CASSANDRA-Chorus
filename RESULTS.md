@@ -543,3 +543,43 @@ The laptop entered standby once during the run: training froze for 25,155 s (7.0
 - Other local-step counts, outer optimizers, slice sizes or worker counts (PLAN step 11).
 - Router remedies, other model sizes and budgets, sliding-window evaluation.
 - Statistical tests beyond three seeds (the per-seed values are given).
+
+## 2026-10-13 · PLAN step 11, batch 1: when the Task B gap opens (existing logs, no GPU)
+
+**What was run.**
+
+- **Script:** `python -m scripts.analyze_task_b_curves --runs-dir C:\Users\senso\chorus-runs`, on branch `stage0/11-sweeps` at code `b19676c` plus the uncommitted script.
+- **Input:** the 12 Task B run logs only; no model was loaded and no GPU was used.
+- **Pairing:** centralized validation bits per character at step s is paired with each simulated arm's merged model after the round whose total worker steps equal s (equal compute).
+- **Validation set:** the first 1M validation characters, not the test split.
+- **Full tables:** `results/task_b_gap_curves.md`.
+
+**Mean gap over seeds 7, 11 and 19, percent of centralized (validation):**
+
+| Share of compute | Full-model averaging | Partial update | Sliced |
+|---|---|---|---|
+| 5% | +23.0 | +58.8 | +36.3 |
+| 10% | +12.4 | +19.5 | +17.6 |
+| 25% | +10.3 | +14.1 | +14.6 |
+| 50% | +8.2 | +11.3 | +12.7 |
+| 80% (learning-rate decay starts) | **+6.8** | +9.8 | +12.1 |
+| 100% | +8.1 | +9.9 | +14.0 |
+
+The final test gaps from the Stage 0 report were +6.1%, +7.6% and +10.8%.
+
+**What this shows (validation, three seeds, this model and budget):**
+
+1. **The local-averaging gap narrows while the learning rate is constant:** in the mean, from +12.4% at 10% of compute to +6.8% at 80%. Not smoothly on every seed: on seed 7 it rises from +8.7% at 20% to +11.0% at 40% before falling.
+2. **It widens again during the final decay, on every seed.** For full averaging, each seed's gap is smallest exactly where the decay starts (+7.2%, +6.4% and +6.7% on seeds 7, 11 and 19). It then rises at each of the four later points, ending at +8.3%, +7.9% and +8.1%. In the mean, sliced goes from +12.1% to +14.0%, and partial update stays flat (+9.8% to +9.9%).
+3. **The masked-routing step grows over training.** The sliced-minus-partial difference is 0.5 points at 25% of compute, 1.4 at 50%, 2.3 at 80% and 4.1 at 100%. The sliced gap stops narrowing at about half the compute; the full and partial gaps keep narrowing.
+4. **The partial-update step shrinks over training.** The partial-minus-full difference is 3.8 points at 25%, 3.1 at 50%, 3.0 at 80% and 1.8 at 100%.
+5. **Validation gaps run 2 to 3 points above the test gaps** at the end. The two sets differ: 1M validation characters against the 5M-character test split. Read the shapes here, not the levels.
+
+**Inference (not tested):**
+
+- Part of the averaging gap behaves like slower convergence, which more compute keeps reducing. The final decay is a phase where averaged training loses ground.
+- A candidate reason: the centralized model decays over 4,000 sequential steps, while each worker decays over only 1,000, split into 8 rounds, each starting with a fresh AdamW.
+- The growing masked-routing step fits the Gate A finding of interchangeable experts: a capacity limit that bites more as the model learns more.
+- Testable with the harness: a smaller H during the decay only; keeping AdamW state; longer runs.
+
+**Not tested:** the test split at intermediate points; other seeds; whether the curves keep these shapes at other H or with an outer optimizer (batch 1 runs B1-3 and B1-4 will show one point each).
