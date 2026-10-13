@@ -1,6 +1,17 @@
 # System study brief: coordinating volunteer training with no server of ours
 
+Status: reviewed by the advisor on 2026-10-13 and revised; launched the same day.
+
 Roadmap step 1.1 (`docs/ROADMAP.md`). Decisions D34, D35, D37 and D38 (`docs/SRS.md` section 9) are the acceptance criteria. Read `docs/ROADMAP.md`, `docs/SRS.md` section 9 (D29 to D38), and `docs/research/2026-10-11-stage0-literature-report.md` sections 3.1 and 5 first.
+
+**Build on what is already read; don't re-read it.** The Stage 0 investigation's notes, `docs/research/2026-10-11-literature-notes/`, already cover:
+
+- in `01-local-averaging.md`: Asynchronous Local-SGD (sections read), and Decoupled DiLoCo and Moshpit SGD (abstract level);
+- in `04a-spes-and-citers.md`, `04b-closest-methods.md` and `06-round2-citation-chase.md`: FoMoE, read in full. FoMoE averages each expert and its router rows within the group of peers that hold it, so it is the precedent question 4 asks about.
+
+Start from those notes and go deeper where this study needs it, as the last investigation did with `docs/prior-work.md`.
+
+**Notes** go in `docs/research/2026-10-13-system-study-notes/`, one file per research strand, with the same format and rules as the Stage 0 notes.
 
 ---
 
@@ -46,7 +57,10 @@ We want to know what works and what it costs, not to confirm a preferred answer.
 
 For every claim, cite the source and say what part you read.
 
-1. **Discovery and bootstrap.** How do peers find each other when the only bootstrap peers are home machines that are often off? Which systems use a DHT (Kademlia, the BitTorrent mainline DHT, libp2p), and what happens when every bootstrap peer is offline?
+1. **Discovery and bootstrap.**
+   - How do peers find each other when the only bootstrap peers are home machines that are often off?
+   - Which systems use a DHT (Kademlia, the BitTorrent mainline DHT, libp2p), and what happens when every bootstrap peer is offline?
+   - The owner chose discovery among our own machines, not joining a public network. So report specifically what **private DHT instances, or discovery among our own machines only**, can do. Public networks are read for their mechanisms only.
 2. **Connections through home routers without third-party relays (R3).**
    - What do hole punching and NAT traversal achieve in practice, with success rates where a primary source gives them?
    - Can our own reachable machines act as relays, and what if none is reachable?
@@ -91,10 +105,20 @@ Evaluate them; do not assume any is right. Each one is listed because of how it 
   - Prime Intellect's framework (does it need a central orchestrator?).
   - Gensyn, if relevant.
   - Plain content-addressed storage on the Hugging Face Hub or BitTorrent.
-- **Contrast cases with a central server:** BOINC and Flower, to show what a server provides and what replacing it costs.
+- **Contrast cases with a central server:** BOINC and Flower, to show what a server provides and what replacing it costs. Read their relevant sections only; they are not evaluated as candidates.
 - **Asynchronous algorithms:** as in question 4.
 
 Add anything closer that you find, especially from 2025 and 2026.
+
+## Classify what each candidate keeps central
+
+For every candidate, classify each element it keeps central as:
+
+- **(a)** a server that we would run;
+- **(b)** a public host for static files;
+- **(c)** a public third-party network used for live coordination or discovery, for example the BitTorrent mainline DHT, a public libp2p network, a blockchain such as Solana or Bittensor, or public relays.
+
+The owner has twice chosen our own machines over (c), for bootstrap and for relays (D37). Any design that relies on (c) is flagged in the report for the owner to decide. It is never recommended by default.
 
 ## Method and honesty rules
 
@@ -111,13 +135,14 @@ The rules of the Stage 0 literature investigation apply. Additionally:
 - **Scale and setting:** trusted peers or permissionless, data-centre links or home connections, model size.
 - **Quotations** under about 15 words.
 - **No novelty claims about Chorus.**
+- **Maintenance claims carry their date and field.** Every latest release, last commit or licence states the date the API was queried and the raw field it came from (for example `pushed_at`, `license.spdx_id`), because these change.
 
 ## Deliverables
 
 One Markdown report, `docs/research/2026-10-13-system-study-report.md`, with these sections:
 
 1. **Summary (one page):** the designs that satisfy R1 to R7, what each keeps central, and how confident the evidence allows us to be.
-2. **Requirements matrix:** candidate systems and approaches against R1 to R7. Each cell says met, partly met or not met, with its evidence and read status.
+2. **Requirements matrix:** candidate systems and approaches against R1 to R7, plus a column for what each keeps central, classified (a), (b) or (c). Each cell says met, partly met or not met, with its evidence and read status.
 3. **Findings by question (1 to 10):** what the sources show, where they disagree, and what is unknown.
 4. **Design options for Chorus.** Two or three concrete architectures. For each:
    - the peer roles;
