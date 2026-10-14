@@ -166,6 +166,13 @@ def test_p5_attempt_log_round_trip(tmp_path):
     assert again.t0() == 5.0 and again.done() == {(0, "close")} and again.gaps() == {3}
 
 
+def test_p3_parse_sizes():
+    from scripts.proto.p3_hub_transfer import parse_sizes
+
+    assert parse_sizes("0.2:3,0.6:1", 2) == [(0.2, 3), (0.6, 1)]
+    assert parse_sizes("0.2,0.6", 2) == [(0.2, 2), (0.6, 2)]
+
+
 def test_shuffled_order_is_new():
     items = list(range(4))
     s = p6.ordered(items, "shuffled")

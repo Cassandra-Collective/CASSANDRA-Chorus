@@ -5,7 +5,7 @@
 | PLAN step | Roadmap Phase 1, evidence for step 1.3 (`docs/ROADMAP.md`); the prototypes of `docs/research/2026-10-13-system-study-report.md` section 6 |
 | Branch | `proto/solo-prototypes` |
 | SRS requirements | D37, D39, D40, D41 |
-| Status | In progress. Verified on the reference laptop: P0, P4 (rerun), P6, P9; P3 smoke test only; P5 and P8 not started (see Verification) |
+| Status | In progress. Verified on the reference laptop: P0, P4 (rerun), P6, P8, P9; P3 smoke test only, reduced run tonight; P5 not now (owner, 2026-10-14) |
 
 ## Problem / Motivation
 
@@ -45,6 +45,7 @@ Planned files. Code is written after this plan, in the order P6, P9, then the to
 | `scripts/proto/p4_log_writers.py` | P4: concurrent conditional-commit writers on one branch; a race to close a round; visibility of a multi-file commit. |
 | `scripts/proto/p5_commit_rate.py` | P5: a week at the planned commit rate. Resumable, with gaps recorded as data. |
 | `scripts/proto/hub_cleanup.py` | Deletes the Hub repositories and buckets that these prototypes created, listed in a local manifest, and nothing else. |
+| `scripts/proto/p8_windows_installs.py` | P8: a fresh virtual environment; each candidate package installed separately; wheel or source build, version and import recorded. |
 | `tests/test_prototypes.py` | Unit tests for the canonical hash, the token guard and the signature checks. |
 | `results/prototypes/` | One JSON and one Markdown file per prototype, plus `p4_attempt1_rate_limit.md`, the record of P4's first attempt. |
 | `RESULTS.md` | One entry when the prototypes are done. |
@@ -271,18 +272,24 @@ The sizes below are the original plan. After the first attempt hit the Hub's com
 - **P5's harder per-account load.** All 576 commits a day come from one account. If that passes, a pilot member's share passes too; if it fails, the per-repository numbers show whether the limit is per account or per repository.
 - **Order: P6 and P9 first.** They need neither the token nor installs, and their findings (canonical order, outer-state dtype, deltas, signature rule) become protocol rules in the architecture document.
 - **P8 and the GitHub arm of P3 wait for the owner's approval**, because they install third-party code and create a repository on the owner's GitHub account.
+- **Owner decisions, 2026-10-14, after the first results:**
+  - **P3:** the reduced size, run tonight. That is 0.2 GB ×3 and 0.6 GB ×1 on both the repository and the bucket, plus the deduplication cases, about 1.4 hours of uplink. No GitHub arm.
+  - **P5:** not now. The script is written and tested, but not started.
+  - **P8:** approved with the latest versions (`huggingface_hub` 2.2.0, not pinned to 1.24.0).
+- **P3 is started from a visible window** (the project's launcher), with keep-awake held from launch. It is not started by a Windows scheduled task, because creating one would change the owner's system, and keep-awake cannot wake a laptop that is already in standby (memory notes on the laptop's power behaviour).
 
 ## Verification
 
 **Setup.** All runs: the reference laptop (RTX 4070 Laptop GPU, 8 GB; Windows 11; the Store Python 3.13 with PyTorch 2.12.1+cu126, `huggingface_hub` 1.24.0, safetensors, `cryptography` 46.0.3); `CHORUS_RUNS_DIR=C:\Users\senso\chorus-runs`. The token prototypes ran against the `cassandra-chorus` organisation on the free plan.
 
-**Unit tests.** `python -m pytest tests/test_prototypes.py tests/test_coordinator.py` passed, 44 tests, of which 13 are in `tests/test_prototypes.py` (run 2026-10-14 after the P4 rerun). The prototype tests cover:
+**Unit tests.** `python -m pytest tests/test_prototypes.py tests/test_coordinator.py` passed, 45 tests, of which 14 are in `tests/test_prototypes.py` (run 2026-10-14 after P8). The prototype tests cover:
 - the canonical hash;
 - `bit_diff`;
 - the token guard, on `whoami` shapes;
 - P6 at toy scale, including GPU true division;
 - P9's cases;
-- P5's schedule and resume logic.
+- P5's schedule and resume logic;
+- P3's size parsing.
 
 `tests/test_coordinator.py` still passes, which shows the P6 swap of `_weighted_mean` is undone after use.
 
@@ -382,12 +389,36 @@ Bucket, one file each:
 - 10 MB (numbers from the console output; the 0.1 GB run overwrote its result file): upload 9.06 s (8.8 Mbit/s); visible to a separate process after 0.55 s; download 7.43 s (10.8 Mbit/s); SHA-256 matched.
 - 0.1 GB: upload 95.1 s (8.4 Mbit/s); download 60.4 s (13.2 Mbit/s).
 
-At these rates the full plan, about 5.6 GB each way, would occupy the home connection for about 2.5 hours, so its size waits for the owner.
+At these rates the full plan, about 5.6 GB each way, would occupy the home connection for about 2.5 hours, so its size was left to the owner.
+
+**The reduced run, for tonight** (owner decision, 2026-10-14), from the repository root in PowerShell:
+
+```
+powershell -File scripts\ops\launch_visible.ps1 -Module scripts.proto.p3_hub_transfer `
+  -Arguments "--org cassandra-chorus --work-dir C:\Users\senso\chorus-runs\proto-p3 --sizes 0.2:3,0.6:1" `
+  -RunsDir C:\Users\senso\chorus-runs
+```
+
+Leave the laptop plugged in with the screen on. Results go to `results/prototypes/p3_hub_transfer.*`, written after every transfer.
+
+### P8. Windows installs: done
+
+- **Command:** `python scripts/proto/p8_windows_installs.py --venv C:\Users\senso\chorus-runs\proto-p8-venv`, run 2026-10-14 06:41 UTC, 232.5 s.
+- **Results:** `results/prototypes/p8_windows_installs.md`, with the environment's `pip freeze` in the JSON file.
+- In a fresh virtual environment of the Store Python 3.13.14 (pip 26.2.1), every package installed and imported natively:
+  - `huggingface_hub[hf_xet]` 2.2.0, `hf_xet` 1.7.0, `safetensors` 0.8.0, `cryptography` 50.0.2 and `iroh` 1.1.0, from prebuilt wheels;
+  - `libp2p` 0.8.0, **built from its source package**, without a compiler problem; its dependencies (coincurve 21.0.0, PyNaCl 1.6.2, trio 0.34.0, multiaddr 0.2.0 and others) came as wheels.
+- iroh and libp2p were imported only, never started.
+- The environment was deleted afterwards.
+- **Deviations from the plan:**
+  - the environment was put in the runs folder, not the scratchpad, because the Store Python redirects writes under `AppData`, where the scratchpad is;
+  - the summary's note column first held only the first character of each import's output (a bug), so that field was removed from the results and the script fixed. Versions come from `pip show`.
+- **Not covered:** a second Windows machine; another Python version; whether iroh or libp2p actually connect (that is P2).
 
 ### Not started
 
-- P5: a week of the laptop online; waits for the owner.
-- P8: installs third-party packages; waits for the owner's approval of the list. What PyPI lists (queried 2026-10-14, about 06:10 UTC, metadata only, nothing installed):
+- P5: a week of the laptop online; not now (owner, 2026-10-14).
+- What PyPI listed before P8 (queried 2026-10-14, about 06:10 UTC, metadata only):
   - `iroh` 1.1.0 (2026-07-16): one Windows wheel, `py3-none-win_amd64`;
   - `libp2p` 0.8.0 (2026-09-26): **no wheel, source package only**, so a Windows install builds from source;
   - `huggingface_hub` 2.2.0 (2026-10-08): pure Python, **one major version ahead of the 1.24.0 the prototypes use**;

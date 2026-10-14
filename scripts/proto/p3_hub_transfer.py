@@ -18,7 +18,7 @@ values. Their upload times show what Xet's deduplication saves.
 Results are written after every transfer. The token is never printed or written.
 
 Usage:
-    python scripts/proto/p3_hub_transfer.py --org cassandra-chorus --work-dir DIR [--sizes 0.2,0.6] [--repeats 3]
+    python scripts/proto/p3_hub_transfer.py --org cassandra-chorus --work-dir DIR [--sizes 0.2:3,0.6:1] [--repeats 3]
 """
 
 from __future__ import annotations
@@ -172,7 +172,16 @@ def transfer(api, token: str, host: str, target: str, local: Path, info: dict[st
     return row
 
 
-def run(org: str, work: Path, sizes: list[float], repeats: int, hosts: list[str], dedup: bool) -> dict[str, Any]:
+def parse_sizes(text: str, default_repeats: int) -> list[tuple[float, int]]:
+    """``"0.2:3,0.6:1"`` to ``[(0.2, 3), (0.6, 1)]``; a size without ``:n`` gets ``default_repeats``."""
+    out = []
+    for item in text.split(","):
+        size, _, n = item.partition(":")
+        out.append((float(size), int(n) if n else default_repeats))
+    return out
+
+
+def run(org: str, work: Path, sizes: list[tuple[float, int]], hosts: list[str], dedup: bool) -> dict[str, Any]:
     token = guarded_token(org)
     from huggingface_hub import HfApi
 
@@ -193,7 +202,7 @@ def run(org: str, work: Path, sizes: list[float], repeats: int, hosts: list[str]
         write_json(RESULT_JSON, report)
         RESULT_MD.write_text(summary_markdown(report), encoding="utf-8")
 
-    for size in sizes:
+    for size, repeats in sizes:
         for rep in range(repeats):
             label = f"{size:g}GB-r{rep}"
             local = work / f"{label}.safetensors"
@@ -254,13 +263,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--org", required=True)
     parser.add_argument("--work-dir", type=Path, required=True, help="local folder for the generated files")
-    parser.add_argument("--sizes", default="0.2,0.6")
-    parser.add_argument("--repeats", type=int, default=3)
+    parser.add_argument("--sizes", default="0.2,0.6", help='sizes in GB, each optionally with ":repeats", e.g. "0.2:3,0.6:1"')
+    parser.add_argument("--repeats", type=int, default=3, help="repeats for sizes given without :n")
     parser.add_argument("--hosts", default="repo,bucket")
     parser.add_argument("--no-dedup", action="store_true")
     args = parser.parse_args(argv)
-    report = run(args.org, args.work_dir, [float(s) for s in args.sizes.split(",")], args.repeats,
-                 args.hosts.split(","), not args.no_dedup)
+    from cassandra_chorus.ops.power import keep_awake
+
+    with keep_awake() as awake:  # held from launch: standby would stall the transfers (laptop power notes)
+        report = run(args.org, args.work_dir, parse_sizes(args.sizes, args.repeats), args.hosts.split(","), not args.no_dedup)
+        report["keep_awake"] = dict(awake)
+        write_json(RESULT_JSON, report)
     print(summary_markdown(report))
     return 0
 
