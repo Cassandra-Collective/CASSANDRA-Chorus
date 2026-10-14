@@ -80,6 +80,7 @@ P8 adds no repository file beyond its result. Its virtual environment lives in t
 | Updates shipped as deltas Δ_i = G − W_i (float32), rebuilt as W_i = G − Δ_i before merging; and a merge written directly in deltas | float32 rounding in the rebuild | whether the network ships full states or deltas |
 | Nesterov velocity saved as float64 and as float32 between rounds 1 and 2 | precision of the stored outer state | the dtype of the published outer state |
 | No file round trip (in memory only) | serialization | whether the file format is lossless here |
+| GPU with the division done by a float64 tensor on the device, in member and in shuffled order (added after the toy-scale run found the GPU difference) | whether true division removes the GPU difference | the division rule |
 
 **Outputs.** For every variant:
 - the canonical hash of the merged state, and of the velocity after each Nesterov round;
@@ -96,7 +97,7 @@ P8 adds no repository file beyond its result. Its virtual environment lives in t
   1. a run configuration file (JSON);
   2. a release manifest listing the SHA-256 of a release archive. The archive is made from this commit with `git archive`.
 - **The rule tested:** **the signature covers the exact bytes of the published file.** A verifier checks the bytes first and only then parses them; nothing is re-serialized before checking. This removes any dependence on how JSON or floats are written. `config_hash` (canonical JSON, `cassandra_chorus/config.py`) remains the configuration's identity, but is not what the signature covers.
-- **Verification:** in a fresh `python -I` subprocess that is given only the files and the 32-byte public key.
+- **Verification:** in a fresh subprocess that is given only the files and the 32-byte public key. As run: `python -E -P` from an empty folder, not `python -I` (see Verification).
 - **Negative tests, each of which must be rejected:**
   - one flipped byte in the configuration;
   - one flipped byte in the signature;
@@ -275,12 +276,13 @@ The sizes below are the original plan. After the first attempt hit the Hub's com
 
 **Setup.** All runs: the reference laptop (RTX 4070 Laptop GPU, 8 GB; Windows 11; the Store Python 3.13 with PyTorch 2.12.1+cu126, `huggingface_hub` 1.24.0, safetensors, `cryptography` 46.0.3); `CHORUS_RUNS_DIR=C:\Users\senso\chorus-runs`. The token prototypes ran against the `cassandra-chorus` organisation on the free plan.
 
-**Unit tests.** `python -m pytest tests/test_prototypes.py` passed, 12 tests. They cover:
+**Unit tests.** `python -m pytest tests/test_prototypes.py tests/test_coordinator.py` passed, 44 tests, of which 13 are in `tests/test_prototypes.py` (run 2026-10-14 after the P4 rerun). The prototype tests cover:
 - the canonical hash;
 - `bit_diff`;
 - the token guard, on `whoami` shapes;
 - P6 at toy scale, including GPU true division;
-- P9's cases.
+- P9's cases;
+- P5's schedule and resume logic.
 
 `tests/test_coordinator.py` still passes, which shows the P6 swap of `_weighted_mean` is undone after use.
 
@@ -377,7 +379,7 @@ Why the full kind survived the cast to float32 while the sliced kind did not was
 ### P3. Transfers: smoke test only
 
 Bucket, one file each:
-- 10 MB: upload 9.06 s (8.8 Mbit/s); visible to a separate process after 0.55 s; download 7.43 s (10.8 Mbit/s); SHA-256 matched.
+- 10 MB (numbers from the console output; the 0.1 GB run overwrote its result file): upload 9.06 s (8.8 Mbit/s); visible to a separate process after 0.55 s; download 7.43 s (10.8 Mbit/s); SHA-256 matched.
 - 0.1 GB: upload 95.1 s (8.4 Mbit/s); download 60.4 s (13.2 Mbit/s).
 
 At these rates the full plan, about 5.6 GB each way, would occupy the home connection for about 2.5 hours, so its size waits for the owner.
@@ -390,7 +392,17 @@ At these rates the full plan, about 5.6 GB each way, would occupy the home conne
   - `libp2p` 0.8.0 (2026-09-26): **no wheel, source package only**, so a Windows install builds from source;
   - `huggingface_hub` 2.2.0 (2026-10-08): pure Python, **one major version ahead of the 1.24.0 the prototypes use**;
   - `hf_xet` 1.7.0, `safetensors` 0.8.0, `cryptography` 50.0.2: Windows wheels.
-- `scripts/proto/hub_cleanup.py` is written and was dry-run on 2026-10-14. It lists 4 organisation resources and skips the personal-namespace probe, which was never created. Nothing is deleted until the owner has seen the results.
+- `scripts/proto/hub_cleanup.py` is written and was dry-run on 2026-10-14. It lists 4 organisation resources and skips the personal-namespace probe, which was never created. Nothing is deleted until the owner has seen the results, and not before P3, which reuses the transfer bucket.
+  - **The manifest is found through `CHORUS_RUNS_DIR`.** Without that variable, the script looks in the repository's `runs/` folder, finds no manifest and deletes nothing. The command, in PowerShell:
+
+    ```
+    $env:CHORUS_RUNS_DIR = "C:\Users\senso\chorus-runs"
+    python scripts/proto/hub_cleanup.py --org cassandra-chorus          # lists only
+    python scripts/proto/hub_cleanup.py --org cassandra-chorus --yes    # deletes
+    ```
+
+    Use the Store Python's full path for `python` on the reference laptop.
+- **Side effect of P4's first attempt:** the burst used up the account's commit budget. For about an hour, from about 05:17 to 06:17 UTC on 2026-10-14, **no commit from the owner's account could be created with any token**. The limit is per account, not per token (inference from the 429 text). The rerun was sized to avoid this.
 - `scripts/proto/p5_commit_rate.py` is written; its schedule and resume logic is unit-tested (`test_p5_*`). It is not started.
 
 **Not tested (known in advance):**
