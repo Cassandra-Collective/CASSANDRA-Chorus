@@ -1,0 +1,87 @@
+{
+  "prototype": "P9 signing dry run",
+  "plan": "docs/implementations/2026-10-14-solo-prototypes.md",
+  "python": "3.13.14",
+  "cryptography": "46.0.3",
+  "verifier_command": "python -E -P verify.py ... (fresh process, started in an empty folder)",
+  "release_commit": "b2dcc9b8bfde22e8f43267155c264f18bf476055",
+  "archive_bytes": 1126841,
+  "domain_prefixes": {
+    "config": "cassandra-chorus/config/v1\n",
+    "manifest": "cassandra-chorus/manifest/v1\n"
+  },
+  "cases": [
+    {
+      "case": "genuine",
+      "description": "the files as signed",
+      "must_accept": true,
+      "as_expected": true,
+      "accepted": true,
+      "exit_code": 0,
+      "stdout": "{\"config_run\": \"p9-dry-run\", \"config_serial\": 1, \"release\": \"0.0.0-dryrun\"}",
+      "reason": ""
+    },
+    {
+      "case": "config-byte-flipped",
+      "description": "one bit flipped in the configuration's first value",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "config: signature does not verify"
+    },
+    {
+      "case": "config-signature-flipped",
+      "description": "one bit flipped in the configuration's signature",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "config: signature does not verify"
+    },
+    {
+      "case": "config-signature-truncated",
+      "description": "the configuration's signature cut to 63 bytes",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "config: signature has 63 bytes, expected 64"
+    },
+    {
+      "case": "wrong-public-key",
+      "description": "the client holds a different public key",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "config: signature does not verify"
+    },
+    {
+      "case": "archive-modified",
+      "description": "one bit flipped in the middle of the release archive",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "archive: SHA-256 or size does not match the manifest"
+    },
+    {
+      "case": "signature-cross-type",
+      "description": "the configuration and its signature presented as the manifest and its signature",
+      "must_accept": false,
+      "as_expected": true,
+      "accepted": false,
+      "exit_code": 1,
+      "stdout": "",
+      "reason": "manifest: signature does not verify"
+    }
+  ],
+  "all_as_expected": true,
+  "seconds": 7.1
+}

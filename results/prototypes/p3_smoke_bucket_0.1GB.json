@@ -1,0 +1,35 @@
+{
+  "prototype": "P3 transfers from this home",
+  "plan": "docs/implementations/2026-10-14-solo-prototypes.md",
+  "org": "cassandra-chorus",
+  "repo": "cassandra-chorus/proto-transfer",
+  "bucket": "cassandra-chorus/proto-transfer-bucket",
+  "time_utc": "2026-10-14T05:26:31Z",
+  "transfers": [
+    {
+      "host": "bucket",
+      "label": "0.1GB-r0",
+      "path": "p3/0.1GB-r0.safetensors",
+      "bytes": 100000160,
+      "upload": {
+        "ok": true,
+        "seconds": 95.11,
+        "mbit_s": 8.4
+      },
+      "visibility": {
+        "visible_after_s": 0.56,
+        "polls": 1
+      },
+      "download": {
+        "ok": true,
+        "seconds": 60.41,
+        "sha256": "d186bf4183d136f5b87b80cbed034ec3f702250a819847e9b21e803e8b8201b2",
+        "bytes": 100000160,
+        "mbit_s": 13.2,
+        "sha256_matches": true
+      }
+    }
+  ],
+  "dedup": [],
+  "finished_utc": "2026-10-14T05:29:13Z"
+}

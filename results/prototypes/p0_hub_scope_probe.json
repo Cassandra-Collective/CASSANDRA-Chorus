@@ -1,0 +1,124 @@
+{
+  "prototype": "P0 Hub token scope probe",
+  "plan": "docs/implementations/2026-10-14-solo-prototypes.md",
+  "org": "cassandra-chorus",
+  "token": "chorus-prototypes (organisation permission repo.contribute.write only; checked by the guard)",
+  "time_utc": "2026-10-14T05:13:01Z",
+  "steps": {
+    "create_private_repo": {
+      "ok": true,
+      "seconds": 0.57,
+      "value": "https://huggingface.co/cassandra-chorus/proto-scope-probe",
+      "expected": "success",
+      "as_expected": true
+    },
+    "repo_is_private": {
+      "ok": true,
+      "seconds": 0.23,
+      "value": true,
+      "expected": "success",
+      "as_expected": true
+    },
+    "upload_file": {
+      "ok": true,
+      "seconds": 0.71,
+      "value": "2595ae5478c1522b17af4489e598ec6bb8577257",
+      "expected": "success",
+      "as_expected": true
+    },
+    "list_files": {
+      "ok": true,
+      "seconds": 0.25,
+      "value": [
+        ".gitattributes",
+        "probe.txt"
+      ],
+      "expected": "success",
+      "as_expected": true
+    },
+    "read_back": {
+      "ok": true,
+      "seconds": 0.47,
+      "value": "probe\n",
+      "expected": "success",
+      "as_expected": true
+    },
+    "create_branch": {
+      "ok": true,
+      "seconds": 0.47,
+      "value": "created",
+      "expected": "success",
+      "as_expected": true
+    },
+    "commit_with_current_parent": {
+      "ok": true,
+      "seconds": 0.7,
+      "value": "0e0e811e7777f3e3c9a3ba1fbc6851b6375b8ba3",
+      "expected": "success",
+      "as_expected": true
+    },
+    "commit_with_stale_parent": {
+      "ok": false,
+      "seconds": 0.51,
+      "error": "HfHubHTTPError",
+      "http_status": 412,
+      "message": "Client error '412 Precondition Failed' for url 'https://huggingface.co/api/models/cassandra-chorus/proto-scope-probe/commit/main' (Request ID: Root=1-6acf0f58-0d2aa1891325bd2d2b7e4fa8;08130ae5-037d-439b-8d66-cb5e95bad1ea)",
+      "expected": "failure",
+      "as_expected": true
+    },
+    "delete_repo": {
+      "ok": true,
+      "seconds": 0.37,
+      "value": "deleted",
+      "expected": "success",
+      "as_expected": true
+    },
+    "create_private_bucket": {
+      "ok": true,
+      "seconds": 0.21,
+      "value": "BucketUrl(url='https://huggingface.co/buckets/cassandra-chorus/proto-bucket-probe', endpoint='https://huggingface.co', namespace='cassandra-chorus', bucket_id='cassandra-chorus/proto-bucket-probe', uri=HfUri(type='bucket', id='cassandra-chorus/proto-bucket-probe', revision=None, path_in_repo=''))",
+      "expected": "success",
+      "as_expected": true
+    },
+    "bucket_add_file": {
+      "ok": true,
+      "seconds": 3.07,
+      "value": "None",
+      "expected": "success",
+      "as_expected": true
+    },
+    "bucket_list": {
+      "ok": true,
+      "seconds": 0.17,
+      "value": [
+        "BucketFile(type='file', path='probe/probe.txt', size=6, xet_hash='a999038aac7148834d8755973b1d1f12e8f912cf6d2fd658514968c5ccce5b8d', mtime=datetime.datetime(2026, 10, 14, 5, 12, 57, 962000, tzinfo=datetime.timezone.utc), uploaded_at=datetime.datetime(2026, 10, 14, 5, 13, 0, 64000, tzinfo=datetime.timezone.utc))"
+      ],
+      "expected": "success",
+      "as_expected": true
+    },
+    "bucket_info": {
+      "ok": true,
+      "seconds": 0.16,
+      "value": "BucketInfo(id='cassandra-chorus/proto-bucket-probe', private=True, created_at=datetime.datetime(2026, 10, 14, 5, 12, 56, tzinfo=datetime.timezone.utc), size=0, total_files=0)",
+      "expected": "success",
+      "as_expected": true
+    },
+    "delete_bucket": {
+      "ok": true,
+      "seconds": 0.24,
+      "value": "deleted",
+      "expected": "success",
+      "as_expected": true
+    },
+    "create_repo_in_personal_namespace": {
+      "ok": false,
+      "seconds": 0.17,
+      "error": "HfHubHTTPError",
+      "http_status": 403,
+      "message": "(Request ID: Root=1-6acf0f5c-0a57e6d169f48e1b6baaba3e;05c12c5f-14df-45d3-a74b-1e38dd6a2bec)",
+      "expected": "failure",
+      "as_expected": true
+    }
+  },
+  "all_as_expected": true
+}
