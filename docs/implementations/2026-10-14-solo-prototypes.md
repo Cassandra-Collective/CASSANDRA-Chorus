@@ -5,7 +5,7 @@
 | PLAN step | Roadmap Phase 1, evidence for step 1.3 (`docs/ROADMAP.md`); the prototypes of `docs/research/2026-10-13-system-study-report.md` section 6 |
 | Branch | `proto/solo-prototypes` |
 | SRS requirements | D37, D39, D40, D41 |
-| Status | In progress. Verified on the reference laptop: P0, P6, P9; P4 first attempt stopped by a rate limit, rerun pending; P3 smoke test only; P5 and P8 not started (see Verification) |
+| Status | In progress. Verified on the reference laptop: P0, P4 (rerun), P6, P9; P3 smoke test only; P5 and P8 not started (see Verification) |
 
 ## Problem / Motivation
 
@@ -348,6 +348,31 @@ Why the full kind survived the cast to float32 while the sliced kind did not was
 - What was rebuilt from the repository: 38 accepted append commits, giving 38 distinct files, all present.
 - The first version of the script lost its own results when the 429 stopped it. It now saves after every phase, records every attempt's status and stops a phase cleanly on a 429.
 - The rerun's budget was cut to about 82 attempts: 10 races, 2 visibility trials, 3 writers with 4 entries each.
+
+### P4. Concurrent log writers: rerun done
+
+- **Command:** `python scripts/proto/p4_log_writers.py --org cassandra-chorus --run r2`, started 06:19:06 UTC.
+- **Results:** `results/prototypes/p4_log_writers.md`. All checks passed.
+- **Commit attempts:** 76 in all, no 429: 22 accepted, 48 refused with 409, 6 refused with 412.
+
+**Close races** (5 writers, same parent):
+- 10 of 10 trials had exactly one success, and the file held the winner's content.
+- Losers were refused with **409 Conflict**, or with 412 once (trial 0, whose send times spread over 947 ms while the processes started).
+- In the other trials the send times were within 0.1 to 4.7 ms of each other.
+
+**Multi-file visibility:**
+- In both trials, every listing showed either 0 or all 50 files of the commit, never part (6 listings each).
+- The full set was listed about 0.2 s before the commit call returned.
+
+**Appends** (3 writers, 4 entries each):
+- 10 told success, all present; 2 told failed, neither present; nothing unexpected.
+- 24 attempts: 10 accepted, 9 refused with 409, 5 with 412, about 2.4 attempts per accepted entry under contention.
+- The script retried only on 412 and gave up on an entry after 3 other errors. Both "failed" entries are such 409 sequences, not lost writes.
+- **Finding:** a client must treat 409 like 412, as "lost the race: re-read the head and retry". The script was left as run, so the result stays reproducible.
+
+**Not covered:**
+- writers on different accounts and homes;
+- whether 409 and 412 refusals count toward the 128-per-hour limit (no 429 at 76 attempts; the first attempt's arithmetic suggests they do).
 
 ### P3. Transfers: smoke test only
 
