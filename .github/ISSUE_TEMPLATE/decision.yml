@@ -1,0 +1,38 @@
+name: Owner decision
+description: A choice the owner (team lead) must make. Recorded as an SRS D-number once taken.
+labels: ["type: decision", "status: needs owner"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Anyone may open a decision issue and add evidence. The owner's comment is the decision; it is then recorded in docs/SRS.md section 9 and the documents are updated in a PR that closes this issue.
+  - type: input
+    id: needed-by
+    attributes:
+      label: Needed by
+      description: The roadmap step or issue that cannot proceed without it.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Where the question arises (architecture section, spec section, issue), with full links.
+    validations:
+      required: true
+  - type: textarea
+    id: options
+    attributes:
+      label: Options known
+      description: Each option and what it costs or risks.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence so far
+      description: Measurements and sources. Label inference as inference.
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Recommendation (optional)

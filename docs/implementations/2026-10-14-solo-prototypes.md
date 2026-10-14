@@ -5,7 +5,7 @@
 | PLAN step | Roadmap Phase 1, evidence for step 1.3 (`docs/ROADMAP.md`); the prototypes of `docs/research/2026-10-13-system-study-report.md` section 6 |
 | Branch | `proto/solo-prototypes` |
 | SRS requirements | D37, D39, D40, D41 |
-| Status | In progress. Verified on the reference laptop: P0, P4 (rerun), P6, P8, P9; P3 smoke test only, reduced run tonight; P5 not now (owner, 2026-10-14) |
+| Status | Accepted by the owner on 2026-10-14 (D43); merged as PR #18. Verified on the reference laptop: P0, P4 (rerun), P6, P8, P9; P3 smoke test only, the reduced run is issue #45; P5 deferred |
 
 ## Problem / Motivation
 

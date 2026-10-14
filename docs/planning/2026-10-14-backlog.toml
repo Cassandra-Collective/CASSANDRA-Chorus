@@ -1,0 +1,1479 @@
+# Seed backlog of 2026-10-14 (docs/implementations/2026-10-14-team-workflow-and-backlog.md).
+# Created on GitHub by scripts/ops/seed_backlog.py. After seeding, the GitHub issues are the source of truth.
+# In bodies: {blob} = https://github.com/<repo>/blob/main/ ; {#key} = number of an EARLIER issue in this file.
+
+repo = "mertefesensoy/CASSANDRA-Chorus"
+owner_login = "mertefesensoy"
+
+# ---------------------------------------------------------------- labels
+
+[[labels]]
+name = "type: feature"
+color = "1d76db"
+description = "New capability in code"
+[[labels]]
+name = "type: bug"
+color = "d73a4a"
+description = "Something behaves wrongly"
+[[labels]]
+name = "type: task"
+color = "0e8a16"
+description = "Planned work that is not a new feature: docs, setup, process, runs"
+[[labels]]
+name = "type: decision"
+color = "5319e7"
+description = "A decision the owner (team lead) must take; recorded as an SRS D-number"
+[[labels]]
+name = "type: research"
+color = "fbca04"
+description = "Reading, surveying or measuring before deciding"
+[[labels]]
+name = "type: experiment"
+color = "f9d0c4"
+description = "A run or prototype with a written plan and a result file"
+[[labels]]
+name = "type: docs"
+color = "0075ca"
+description = "Documentation, specifications, plans"
+[[labels]]
+name = "type: epic"
+color = "3e4b9e"
+description = "A large item to be split into issues when its phase starts"
+
+[[labels]]
+name = "area: protocol"
+color = "c5def5"
+description = "Round log, rounds, closing, counted set"
+[[labels]]
+name = "area: client"
+color = "c5def5"
+description = "The cassandra-chorus peer client, installer, dashboard"
+[[labels]]
+name = "area: merge"
+color = "c5def5"
+description = "Merge rule, outer optimizer, agreement hashes"
+[[labels]]
+name = "area: storage"
+color = "c5def5"
+description = "Public hosts, transport, checkpoints, update format"
+[[labels]]
+name = "area: security"
+color = "c5def5"
+description = "Signing, keys, trust, threat model"
+[[labels]]
+name = "area: data"
+color = "c5def5"
+description = "Corpora, licences, shards, evaluation sets"
+[[labels]]
+name = "area: tokenizer"
+color = "c5def5"
+description = "Tokenizer training and vocabulary"
+[[labels]]
+name = "area: model"
+color = "c5def5"
+description = "Model architecture and size"
+[[labels]]
+name = "area: training"
+color = "c5def5"
+description = "Pretraining, SFT and RL runs"
+[[labels]]
+name = "area: sandbox"
+color = "c5def5"
+description = "The assistant sandbox, checker and benchmark"
+[[labels]]
+name = "area: inference"
+color = "c5def5"
+description = "Local inference, quantization, the demo"
+[[labels]]
+name = "area: ops"
+color = "c5def5"
+description = "CI, machines, run operations, housekeeping"
+[[labels]]
+name = "area: process"
+color = "c5def5"
+description = "Team workflow, planning, reviews"
+
+[[labels]]
+name = "priority: high"
+color = "b60205"
+description = "Needed now or blocking other work"
+[[labels]]
+name = "priority: medium"
+color = "d93f0b"
+description = "Needed within the current or next phase"
+[[labels]]
+name = "priority: low"
+color = "fef2c0"
+description = "Later, or nice to have"
+
+[[labels]]
+name = "status: blocked"
+color = "000000"
+description = "Waits on another issue (see 'Blocked by' in the body)"
+[[labels]]
+name = "status: needs owner"
+color = "e99695"
+description = "Only the owner can do or decide this (their machine, account or call)"
+[[labels]]
+name = "status: deferred"
+color = "cccccc"
+description = "Deliberately postponed by the owner"
+
+# ---------------------------------------------------------------- milestones
+
+[[milestones]]
+title = "Phase 1: Decide and specify"
+description = "Roadmap Phase 1: product spec, architecture, SRS and PLAN rewrite; the decisions Phase 3 needs first."
+[[milestones]]
+title = "Phase 2: Data foundation"
+description = "Roadmap Phase 2: English and Turkish corpus with licences, tokenizer, versioned shards, evaluation sets."
+[[milestones]]
+title = "Phase 3: Network v0 on our machines"
+description = "Roadmap Phase 3: protocol, coordination without a server, peer client, storage, Gates N1a and N1b."
+[[milestones]]
+title = "Phase 4: Friends pilot"
+description = "Roadmap Phase 4: 3 to 5 trusted participants, first research pool, pilot pretraining, Gate N2."
+[[milestones]]
+title = "Phase 5: Assistant post-training"
+description = "Roadmap Phase 5: sandbox and benchmark, SFT, RL with checkable rewards, local inference."
+[[milestones]]
+title = "Phase 6: Open pool"
+description = "Roadmap Phase 6: threat model, accounts and ledger, ablation pools, open participation."
+[[milestones]]
+title = "Research track"
+description = "Continuous research questions; each becomes a research pool with its own plan and pre-registered reading."
+[[milestones]]
+title = "Housekeeping and process"
+description = "Team workflow, CI, Stage 0 loose ends, local machine upkeep."
+
+# ================================================================ Phase 1
+
+[[issues]]
+key = "review-spec"
+title = "Review and approve the assistant product specification, draft 0.1 (PR #20)"
+labels = ["type: docs", "area: process", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Context:** roadmap step 1.2. The product specification (#20) was written on 2026-10-13 and has not been reviewed. It was not part of the approvals of 2026-10-14 (PRs #18 and #19).
+
+**Task**
+- Read `docs/assistant-spec.md` in #20.
+- Approve, or request changes, in the PR.
+- The ten owner decisions it raises (OD-1 to OD-10) each have their own issue; they do not all have to be settled before approving the draft.
+
+**Acceptance criteria**
+- [ ] #20 approved and merged, or changes requested in the PR.
+- [ ] The approval recorded as an SRS decision (D-number).
+
+**Why now:** OD-6 (target devices) sets the pilot model's size, and update size is now a measured constraint (architecture section 9).
+'''
+
+[[issues]]
+key = "od-1"
+title = "Decision OD-1: which tools are in the assistant's first version"
+labels = ["type: decision", "area: sandbox", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before the sandbox is built (roadmap 5.1).
+
+**Context:** product spec (#20), section 3: a draft tool set for calendar, reminders, email and time. Irreversible tools (`delete_event`, `delete_reminder`, `send_draft`) need confirmation.
+
+**Options:** the full draft set; a read-mostly first version; calendar and reminders first, email later.
+
+**How to record it:** comment the decision here. It becomes an SRS D-number, and the spec is updated in a PR that closes this issue.
+
+**Related:** {#review-spec}
+'''
+
+[[issues]]
+key = "od-2"
+title = "Decision OD-2: may the first version send email (with confirmation) or only draft it"
+labels = ["type: decision", "area: sandbox", "area: security", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before the sandbox is built (roadmap 5.1).
+
+**Context:** product spec (#20), sections 3 and 8. Sending is irreversible; the tool layer enforces confirmation either way.
+
+**Options:** draft-only (`draft_reply`, never `send_draft`); sending after an explicit confirmation.
+
+**How to record it:** comment the decision here; it becomes an SRS D-number and the spec is updated in a PR that closes this issue.
+'''
+
+[[issues]]
+key = "od-3"
+title = "Decision OD-3: which data licences are acceptable for pretraining text"
+labels = ["type: decision", "area: data", "priority: medium", "status: needs owner"]
+milestone = "Phase 2: Data foundation"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the corpus survey (roadmap 2.1) reports what each licence requires.
+
+**Context:** product spec (#20), section 6. Share-alike licences may have implications for releasing the model's weights (see OD-10).
+
+**Input expected:** the English and Turkish corpus surveys in this milestone, which record each source's licence and obligations.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "od-4"
+title = "Decision OD-4: how \"human-written\" is enforced for web text"
+labels = ["type: decision", "area: data", "priority: medium", "status: needs owner"]
+milestone = "Phase 2: Data foundation"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the corpus survey (roadmap 2.1).
+
+**Context:** product spec (#20), section 6, and the data policy D32 (no other models' outputs). Web crawls made after AI writing tools became common contain machine-written text.
+
+**Options (from the spec):** only older snapshots; only curated sources; a stated, accepted residual.
+
+**Input expected:** the policy issue on AI-era web text in this milestone.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "od-5"
+title = "Decision OD-5: accept volunteer-written requests and conversations for SFT"
+labels = ["type: decision", "area: training", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before SFT data is produced (roadmap 5.2).
+
+**Context:** product spec (#20), section 4, "Known weakness": template-generated language is narrow. Volunteer-written text, under a contributor licence, stays within D32 because it is human-written.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "od-6"
+title = "Decision OD-6: target devices for local inference (sets the model size range)"
+labels = ["type: decision", "area: model", "area: inference", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before the pilot model's size is fixed (roadmap 4.3). Raised to Phase 1 because model size now drives update size, which is a measured constraint.
+
+**Context**
+- Product spec (#20), section 7: all parameters must fit in the user's device memory (an MoE's experts all count); the range is roughly 100M to 1B parameters, to be calculated, not assumed.
+- [Architecture section 9]({blob}docs/ARCHITECTURE.md): from one home, 8.4 Mbit/s up and 13.2 down. A 100M to 300M model in float32 is 0.4 to 1.2 GB per full update, about 6 to 19 minutes to upload (arithmetic, assuming similar links).
+
+**Options (examples from the spec):** a laptop with an 8 GB GPU; CPU-only with 16 GB of memory.
+
+**How to record it:** comment here; it becomes an SRS D-number and the spec's section 7 gets the calculated range.
+'''
+
+[[issues]]
+key = "od-7"
+title = "Decision OD-7: tokenizer vocabulary size"
+labels = ["type: decision", "area: tokenizer", "priority: medium", "status: needs owner"]
+milestone = "Phase 2: Data foundation"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the tokenizer step (roadmap 2.2) measures tokens per word in each language and the effect on model size.
+
+**Context:** product spec (#20), section 7.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "od-8"
+title = "Decision OD-8: success threshold the first release must meet"
+labels = ["type: decision", "area: sandbox", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before the first post-training run that is judged against it; written down before the run, as every Stage 0 gate was.
+
+**Context:** product spec (#20), section 9 (task success per language; zero unconfirmed irreversible actions; adversarial resistance; reply language).
+
+**How to record it:** comment here; it becomes an SRS D-number and a pre-registered gate.
+'''
+
+[[issues]]
+key = "od-9"
+title = "Decision OD-9: when to add human feedback"
+labels = ["type: decision", "area: training", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the first RL results (roadmap 5.3).
+
+**Context:** product spec (#20), section 5. Human feedback would be a second way for people to contribute (tone and helpfulness preferences).
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "od-10"
+title = "Decision OD-10: licence for released model weights"
+labels = ["type: decision", "area: process", "priority: low", "status: needs owner"]
+milestone = "Phase 5: Assistant post-training"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before the first public release of weights.
+
+**Context:** product spec (#20), section 11. The code is Apache-2.0. Data licences chosen under {#od-3} (share-alike in particular) may constrain the weights' licence.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-1"
+title = "Decision AD-1: where the signing key lives, its backup, and whether maintainers co-sign later"
+labels = ["type: decision", "area: security", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** the first signed release or configuration.
+
+**Context:** [architecture sections 4 and 12]({blob}docs/ARCHITECTURE.md). The owner signs releases and run configurations offline with an Ed25519 key (D37, D40). Prototype P9 passed all 7 cases on one machine ([result]({blob}results/prototypes/p9_signing_dry_run.md)). A new key is accepted only if the old key signs it (BOINC's rule). D40 foresees maintainers later.
+
+**Questions**
+- Where is the private key kept (offline device, password manager, hardware key)?
+- How many backups, and where?
+- Later: one owner key, or co-signing by maintainers?
+
+**How to record it:** comment here; it becomes an SRS D-number and architecture section 4 is updated.
+'''
+
+[[issues]]
+key = "ad-2"
+title = "Decision AD-2: does the round log live in a Hugging Face organisation of its own"
+labels = ["type: decision", "area: protocol", "area: security", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before Phase 3 networking.
+
+**Context:** [architecture sections 4, 5 and 13]({blob}docs/ARCHITECTURE.md). Several members must write the log. On the Hub, the `write` role can "create, delete, or rename any repo" in its organisation (system study Q7), so a log in its own organisation limits what a member's access can reach. P0 showed that a token with only `repo.contribute.write` creates and writes the organisation's repositories ([result]({blob}results/prototypes/p0_hub_scope_probe.md)). Whether such a token can write a repository created by another account is not yet tested (second-account test in Phase 3).
+
+**Options:** the log in `cassandra-chorus` with the rest; the log in a separate organisation with members holding `write` only there.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-3"
+title = "Decision AD-3: which host mirrors the checkpoints"
+labels = ["type: decision", "area: storage", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** Phase 3, before checkpoints are published.
+
+**Context:** [architecture sections 5 and 9]({blob}docs/ARCHITECTURE.md). Every checkpoint is copied to a second host, so one host's outage stops rounds but loses nothing.
+
+**Options (system study Q5):** GitHub release assets (under 2 GiB each on free accounts; 500 content-creating API requests per hour); a second Hugging Face organisation; Cloudflare R2 (needs a subscription that may become paid; flagged against D37's "nothing the owner pays for").
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-4"
+title = "Decision AD-4: checkpoint retention (keep every k-th round in full)"
+labels = ["type: decision", "area: storage", "priority: low", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** Phase 3.
+
+**Context:** [architecture section 9]({blob}docs/ARCHITECTURE.md). Every round's hashes stay in the log; full checkpoint files are kept for every k-th round. Storage on free hosts is "best-effort" and not quantified for buckets.
+
+**How to record it:** comment here with k (and any size cap); it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-5"
+title = "Decision AD-5: Q_min, the minimum number of updates for a round to merge"
+labels = ["type: decision", "area: protocol", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** the Gate N1b pre-registration.
+
+**Context:** [architecture section 6.4]({blob}docs/ARCHITECTURE.md). In deadline mode (D39), if fewer than Q_min updates are posted by the deadline, the round closes with an empty counted set and the model is unchanged.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-6"
+title = "Decision AD-6: synchronous mode's abort timeout"
+labels = ["type: decision", "area: protocol", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** Gate N1a.
+
+**Context:** [architecture section 6.5]({blob}docs/ARCHITECTURE.md). In synchronous mode (D38) a round closes only when every assigned member has posted; after a long timeout the closer posts `abort` and the round is rerun with the same assignment. Without a timeout the round can wait forever (the flaw the system study found in flwr-serverless).
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-7"
+title = "Decision AD-7: full states or deltas as the update format"
+labels = ["type: decision", "area: merge", "area: storage", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** the protocol specification (roadmap 3.1); asked for early by the owner.
+
+**Context:** [architecture section 7.1, step 6]({blob}docs/ARCHITECTURE.md). P6 at full scale ([result]({blob}results/prototypes/p6_merge_determinism.md)): rebuilding W = G - Δ from deltas before merging gave the same bits as full states on the CPU; merging the deltas directly did not (355,790 and 499,977 differing elements). Either works if every peer does the same thing.
+
+**Related:** the update-size study in Phase 3 may favour deltas if they compress better (not measured).
+
+**How to record it:** comment here; it becomes an SRS D-number and a rule in architecture section 7.
+'''
+
+[[issues]]
+key = "ad-8"
+title = "Decision AD-8: bitwise hashes or a tolerance check for merge agreement"
+labels = ["type: decision", "area: merge", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the cross-machine merge test on a second machine (Phase 3).
+
+**Context:** [architecture section 7.2]({blob}docs/ARCHITECTURE.md). On one machine the CPU merge is bitwise stable across repeats, threads, result order and file round trips (P6). Equal hashes there are necessary, not sufficient: other machines and PyTorch builds are untested. The fallback is a tolerance check, as Templar's sync score does.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-9"
+title = "Decision AD-9: which work-unit kind each round uses, and what to do when too few peers are present"
+labels = ["type: decision", "area: protocol", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** Phase 3 round driver.
+
+**Context:** [architecture section 8]({blob}docs/ARCHITECTURE.md). Both work-unit kinds are supported (D34). If the present set is too small to give every expert 2 holders (D37), the round runs full-copy units only, or is skipped.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-10"
+title = "Decision AD-10: record members' homes in the configuration for holder placement"
+labels = ["type: decision", "area: protocol", "priority: low", "status: needs owner"]
+milestone = "Phase 4: Friends pilot"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** Phase 4.
+
+**Context:** [architecture section 8]({blob}docs/ARCHITECTURE.md). Two holders of one expert in the same household are likely to fail together (Bamboo places replicas in different zones; system study Q6). Placing holders in different homes needs the configuration to know who shares a home: a privacy question as well as a technical one.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-11"
+title = "Decision AD-11: does every peer download all updates and merge, or one peer merges and others spot-check"
+labels = ["type: decision", "area: merge", "area: storage", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** after the P3 transfer results; asked for early by the owner.
+
+**Context:** [architecture section 9]({blob}docs/ARCHITECTURE.md). In full-copy mode a peer that merges everything downloads N - 1 updates: at 5 peers and 0.6 GB, 2.4 GB per round, about 25 minutes at the 13.2 Mbit/s measured from one home ([P3 smoke test]({blob}results/prototypes/p3_smoke_bucket_0.1GB.md)). A designated merger cuts this to one checkpoint per peer but asks the others to trust or spot-check it.
+
+**Options:** every peer merges; the designated publisher merges and others verify the parts they hold (sliced) or spot-check; a mix by work-unit kind.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "ad-12"
+title = "Decision AD-12: Gate N1b definition (outer optimizer, primary reading, compute accounting, allowance)"
+labels = ["type: decision", "area: training", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before Gate N1b's first run.
+
+**Context:** [architecture section 14]({blob}docs/ARCHITECTURE.md), the draft pre-registration, and system study section 5. Open: the outer optimizer; equal tokens or equal wall-clock as the primary reading (HeLoCo's comparison flips sign between them); whether dropped late work counts as compute spent; the largest acceptable gap against the synchronous mode and against centralized training.
+
+**How to record it:** comment here; it becomes an SRS D-number and the Gate N1b pre-registration.
+'''
+
+[[issues]]
+key = "ad-13"
+title = "Decision AD-13: round length and the update-size budget per round"
+labels = ["type: decision", "area: protocol", "area: storage", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** the protocol specification (roadmap 3.1); new on 2026-10-14 from the P3 smoke test.
+
+**Context:** [architecture sections 6.1 and 9]({blob}docs/ARCHITECTURE.md). The system study's arithmetic assumed 30-minute rounds. From one home: 8.4 Mbit/s up, 13.2 down. One 0.6 GB update takes about 9.5 minutes up. Round length L, the training deadline D, and the largest update a round can carry must fit the slowest member's link plus training time.
+
+**Input expected:** the reduced P3 run (Phase 1) and the update-size study (Phase 3).
+
+**How to record it:** comment here; it becomes an SRS D-number and the configuration's defaults.
+'''
+
+[[issues]]
+key = "p3-run"
+title = "Run P3 (reduced): upload and download timing from the owner's home"
+labels = ["type: experiment", "area: storage", "priority: high", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Context:** prototype P3, reduced size by the owner's decision of 2026-10-14 (D43): 0.2 GB x3 and 0.6 GB x1 on a private Hub repository and a private bucket, plus the Xet deduplication cases. About 1.4 hours of uplink; needs the reference laptop plugged in with the screen on.
+
+**How to run** (PowerShell, repository root): see "P3. Transfers" in the [plan]({blob}docs/implementations/2026-10-14-solo-prototypes.md) for the exact `launch_visible.ps1` command.
+
+**Acceptance criteria**
+- [ ] `results/prototypes/p3_hub_transfer.md` and `.json` committed in a PR.
+- [ ] The plan's Verification section updated with the results and what they do not cover.
+
+**Feeds:** {#ad-11}, {#ad-13}.
+'''
+
+[[issues]]
+key = "arch-p3"
+title = "Update the architecture with the P3 results"
+labels = ["type: docs", "area: storage", "priority: high", "status: blocked"]
+milestone = "Phase 1: Decide and specify"
+body = '''
+**Context:** [architecture section 9]({blob}docs/ARCHITECTURE.md) has "pending" rows for upload, download and visibility times and for Xet deduplication; section 16 tracks prototypes.
+
+**Task:** fill those rows from the P3 results; restate the traffic arithmetic and its implications for {#ad-11} and {#ad-13}.
+
+**Acceptance criteria**
+- [ ] Section 9's measured table complete; section 16 updated.
+- [ ] Every number traceable to `results/prototypes/p3_hub_transfer.json`.
+
+**Blocked by:** {#p3-run}
+'''
+
+[[issues]]
+key = "hub-cleanup"
+title = "Delete the prototype repositories and buckets on the Hub"
+labels = ["type: task", "area: ops", "priority: medium", "status: blocked", "status: needs owner"]
+milestone = "Phase 1: Decide and specify"
+assignees = ["owner"]
+body = '''
+**Context:** the prototypes created private `proto-*` repositories and buckets in `cassandra-chorus`, recorded in a local manifest on the reference laptop. P3 reuses the transfer bucket, so clean-up waits for it.
+
+**How:** `scripts/proto/hub_cleanup.py`; set `CHORUS_RUNS_DIR=C:\Users\senso\chorus-runs` first, or it finds no manifest and deletes nothing (exact commands in the [plan]({blob}docs/implementations/2026-10-14-solo-prototypes.md)). Run once without `--yes` to list, then with `--yes`.
+
+**Acceptance criteria**
+- [ ] No `proto-*` repository or bucket left in the organisation.
+- [ ] The `chorus-prototypes` token revoked if no further prototype needs it.
+
+**Blocked by:** {#p3-run}
+'''
+
+[[issues]]
+key = "srs-rewrite"
+title = "Roadmap 1.4a: rewrite the SRS around the roadmap (Stages 1 to 3 as requirements with acceptance criteria)"
+labels = ["type: docs", "area: process", "priority: high", "status: blocked"]
+milestone = "Phase 1: Decide and specify"
+body = '''
+**Context:** roadmap step 1.4. [`docs/SRS.md`]({blob}docs/SRS.md) sections 1 to 7 still describe the Stage 0 plan; decisions D29 to D45 and the approved architecture ([`docs/ARCHITECTURE.md`]({blob}docs/ARCHITECTURE.md)) are not yet requirements.
+
+**Task:** rewrite sections 1 to 8 so that each phase's deliverables become numbered requirements with acceptance criteria; keep section 9 (decisions) and section 10 (prior work). Stage 0 requirements move to an appendix as the historical record.
+
+**Acceptance criteria**
+- [ ] Every architecture "Rule" maps to a requirement ID or is listed as deliberately left out.
+- [ ] Every requirement has an acceptance criterion and the gate or test that checks it.
+- [ ] Owner approval recorded as a D-number.
+
+**Blocked by:** {#review-spec}
+'''
+
+[[issues]]
+key = "plan-rewrite"
+title = "Roadmap 1.4b: write the PLAN for Phases 2 and 3 (steps, owners, order)"
+labels = ["type: docs", "area: process", "priority: high", "status: blocked"]
+milestone = "Phase 1: Decide and specify"
+body = '''
+**Context:** roadmap step 1.4. [`docs/PLAN.md`]({blob}docs/PLAN.md) is the Stage 0 record. The team now works from issues; the PLAN gives the order and the dependencies between them.
+
+**Task:** a PLAN for Phases 2 and 3 that references these issues, the order in which they unblock each other, and who is assigned (by the owner).
+
+**Acceptance criteria**
+- [ ] Every Phase 2 and Phase 3 issue appears in the PLAN in dependency order.
+- [ ] Owner approval recorded.
+
+**Blocked by:** {#srs-rewrite}
+'''
+
+# ================================================================ Housekeeping and process (early: the team needs these first)
+
+[[issues]]
+key = "ci"
+title = "CI: run the test suite on Windows and Linux for every pull request"
+labels = ["type: feature", "area: ops", "area: process", "priority: high", "good first issue"]
+milestone = "Housekeeping and process"
+body = '''
+**Context:** the team is starting. Tests are run by hand today (`python -m pytest`; GPU tests skip without a GPU). The project targets Windows and Linux (roadmap 4.1).
+
+**Task:** a GitHub Actions workflow that runs `python -m pytest` on `windows-latest` and `ubuntu-latest` with Python 3.13 and a CPU build of PyTorch, on every pull request and on pushes to `main`.
+
+**Acceptance criteria**
+- [ ] The workflow passes on `main`.
+- [ ] GPU-marked tests skip cleanly; tests that download data or contact the Hub do not run in CI.
+- [ ] A required status check on `main` (the owner sets branch protection).
+
+**Not covered:** GPU runners.
+'''
+
+[[issues]]
+key = "project-board"
+title = "Create a GitHub Project board for the team"
+labels = ["type: task", "area: process", "priority: medium", "status: needs owner"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** the issues are organised by milestones and labels. A Project board adds columns (To do, In progress, In review, Done) and per-person views. The `gh` token used so far lacks the `project` scope.
+
+**Task:** run `gh auth refresh -s project` (or create the board in the GitHub web interface), then add all open issues to the board.
+
+**Acceptance criteria**
+- [ ] A board with the open issues and a status field.
+'''
+
+[[issues]]
+key = "branch-protection"
+title = "Protect the main branch: pull requests with one review and passing CI"
+labels = ["type: task", "area: process", "priority: high", "status: needs owner", "status: blocked"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** with a team, changes should reach `main` only through reviewed pull requests ([CONTRIBUTING](https://github.com/mertefesensoy/CASSANDRA-Chorus/blob/main/CONTRIBUTING.md) once the workflow PR is merged).
+
+**Task:** in the repository settings, require a pull request with at least one approving review and the CI status check before merging to `main`; disallow force pushes.
+
+**Acceptance criteria**
+- [ ] Branch protection (or a ruleset) active on `main`.
+
+**Blocked by:** {#ci}
+'''
+
+# ================================================================ Phase 2
+
+[[issues]]
+key = "corpus-en"
+title = "Roadmap 2.1a: survey open-licensed, human-written English pretraining sources"
+labels = ["type: research", "area: data", "priority: medium"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.1; product spec (#20) section 6; data policy D32 (no other models' outputs; human-written text only).
+
+**Task:** list candidate English sources (encyclopedia text, public-domain books, government and legal texts, filtered web text), each with its licence, the licence's obligations, size in tokens (estimated), and the date range of the text. Read each licence from its primary source.
+
+**Acceptance criteria**
+- [ ] A research note in `docs/research/` with one row per source and links to the licence texts.
+- [ ] Total usable volume estimated.
+
+**Feeds:** {#od-3}, {#od-4}.
+'''
+
+[[issues]]
+key = "corpus-tr"
+title = "Roadmap 2.1b: survey open-licensed, human-written Turkish pretraining sources"
+labels = ["type: research", "area: data", "priority: medium"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.1 and its risk table: "Not enough open-licensed Turkish text" is measured before committing to the model size.
+
+**Task:** as {#corpus-en}, for Turkish; report the volume ratio to English.
+
+**Acceptance criteria**
+- [ ] A research note with one row per source, licence links, estimated tokens.
+- [ ] A statement of whether the volume supports the planned model size (with OD-6's range).
+
+**Feeds:** {#od-3}, {#od-4}, {#od-6}.
+'''
+
+[[issues]]
+key = "ai-text-policy"
+title = "Roadmap 2.1c: policy options for web text written after AI writing tools"
+labels = ["type: research", "area: data", "priority: medium"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.1 asks for a stated policy; product spec (#20) section 6 lists three options (older snapshots only; curated sources only; a stated residual).
+
+**Task:** for each option, what it costs in volume (from the surveys), how it would be checked, and what residual risk remains. No novelty claims; cite primary sources.
+
+**Acceptance criteria**
+- [ ] A note comparing the options with numbers from {#corpus-en} and {#corpus-tr}.
+
+**Feeds:** {#od-4}.
+'''
+
+[[issues]]
+key = "dedup-filter"
+title = "Roadmap 2.1d: corpus pipeline: download, record licences, deduplicate, filter"
+labels = ["type: feature", "area: data", "priority: medium", "status: blocked"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.1. Every source, its licence and its use are recorded in the repository (product spec section 6).
+
+**Task:** a reproducible pipeline (code in `cassandra_chorus/data/` or `scripts/`) that fetches the approved sources, records a manifest (source, licence, URL, retrieval date, SHA-256), deduplicates and filters.
+
+**Acceptance criteria**
+- [ ] Running it twice gives identical outputs (hashes recorded).
+- [ ] Unit tests for deduplication and filtering.
+- [ ] An implementation document.
+
+**Blocked by:** {#od-3}, {#od-4}
+'''
+
+[[issues]]
+key = "tokenizer"
+title = "Roadmap 2.2: train a byte-level BPE tokenizer on English and Turkish"
+labels = ["type: feature", "area: tokenizer", "priority: medium", "status: blocked"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.2; product spec (#20) section 7: byte-level BPE on a balanced sample; special tokens for the four roles and tool-call boundaries; dates, times and numbers split consistently.
+
+**Task:** train candidates at several vocabulary sizes; measure tokens per word in each language and the embedding parameters each size costs.
+
+**Acceptance criteria**
+- [ ] A results table (vocabulary size against tokens per word per language) in `results/`.
+- [ ] The trained tokenizer files versioned and hashed.
+
+**Blocked by:** {#dedup-filter}. **Feeds:** {#od-7}.
+'''
+
+[[issues]]
+key = "shards"
+title = "Roadmap 2.3a: fixed, hashed, versioned data shards that volunteers download"
+labels = ["type: feature", "area: data", "area: storage", "priority: medium", "status: blocked"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.3; [architecture section 8]({blob}docs/ARCHITECTURE.md): a work unit names shard IDs and offsets, never data; shards live on public hosts.
+
+**Task:** shard format, naming, a manifest with SHA-256 per shard, upload to a Hub dataset repository, and a loader that verifies hashes.
+
+**Acceptance criteria**
+- [ ] A shard manifest; a loader with hash checks and tests.
+- [ ] Shard upload counted against the Hub's commit limit (128 per hour on the free plan): batch files per commit.
+
+**Blocked by:** {#tokenizer}, {#od-7}
+'''
+
+[[issues]]
+key = "eval-sets"
+title = "Roadmap 2.3b: held-out evaluation sets in English and Turkish"
+labels = ["type: feature", "area: data", "priority: medium", "status: blocked"]
+milestone = "Phase 2: Data foundation"
+body = '''
+**Context:** roadmap 2.3; product spec (#20) section 9 (held-out text loss in each language).
+
+**Acceptance criteria**
+- [ ] Held-out sets fixed and hashed, disjoint from the training shards (checked by the deduplication step).
+- [ ] Documented in the shard manifest.
+
+**Blocked by:** {#dedup-filter}
+'''
+
+# ================================================================ Phase 3
+
+[[issues]]
+key = "merge-division-bug"
+title = "merge.py: GPU merge differs from CPU (CUDA divides by a Python scalar via its reciprocal)"
+labels = ["type: bug", "area: merge", "priority: high"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Found by:** prototype P6 on 2026-10-14 ([result]({blob}results/prototypes/p6_merge_determinism.md)).
+
+**What happens:** `_weighted_mean` in [`cassandra_chorus/coordinator/merge.py`]({blob}cassandra_chorus/coordinator/merge.py) ends with `acc / total`, where `total` is a Python number. On CUDA, PyTorch computes this as a multiplication by the reciprocal. At 46M parameters the sliced merge on the GPU differed from the CPU in 472 elements (largest difference 5.96e-08). Dividing by a float64 tensor on the device made them bitwise equal, in member and shuffled order.
+
+**Task**
+- [ ] Divide by a float64 tensor on the accumulator's device.
+- [ ] A GPU test (marked `gpu`) that the merge is bitwise equal on CPU and GPU.
+- [ ] Document that the Nesterov velocity must be stored and published as float64 (float32 storage changed round 2's model in 204,432 elements).
+- [ ] An implementation document; the Stage 0 merge on the CPU is unchanged (check against `tests/test_coordinator.py`).
+'''
+
+[[issues]]
+key = "protocol-spec"
+title = "Roadmap 3.1: protocol specification (work units, results, log entries, manifests, versions)"
+labels = ["type: docs", "area: protocol", "priority: high", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.1; the approved working architecture ([`docs/ARCHITECTURE.md`]({blob}docs/ARCHITECTURE.md), D44) already states most rules: entry layout (6.2), appending (6.3), closing (6.4), the merge (7), parts and manifests (5), versions (12).
+
+**Task:** a normative specification: JSON schemas for every log entry type and the run configuration; the update and checkpoint file layout by part; the manifest; the canonical part and model hashes; version fields; error handling (409 and 412 retry; 429 back-off).
+
+**Acceptance criteria**
+- [ ] Schemas with examples; a validator in code with tests.
+- [ ] Every "Rule" of the architecture either in the spec or listed as out of scope.
+
+**Blocked by:** {#ad-7}, {#ad-13}
+'''
+
+[[issues]]
+key = "hashes-pkg"
+title = "Canonical part and model hashes in the package"
+labels = ["type: feature", "area: merge", "priority: medium", "good first issue"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture section 7.2]({blob}docs/ARCHITECTURE.md). The canonical tensor hash exists as prototype code in [`scripts/proto/common.py`]({blob}scripts/proto/common.py) (`canonical_hash`) with tests in `tests/test_prototypes.py`.
+
+**Task:** move it into `cassandra_chorus` (for example `cassandra_chorus/coordinator/hashing.py`); add per-part hashes (the shared part; each expert with its router row) and the model hash over the sorted (part ID, part hash) list.
+
+**Acceptance criteria**
+- [ ] Tests: insertion order and laziness do not change the hash; one bit, dtype, shape or name does.
+- [ ] Part IDs documented; an implementation document.
+'''
+
+[[issues]]
+key = "signing"
+title = "Signing and verification of run configurations and releases"
+labels = ["type: feature", "area: security", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture sections 4 and 12]({blob}docs/ARCHITECTURE.md); prototype P9 ([code]({blob}scripts/proto/p9_signing_dry_run.py), [result]({blob}results/prototypes/p9_signing_dry_run.md)).
+
+**Task:** a module that signs (owner, offline) and verifies (client) with Ed25519 over `b"cassandra-chorus/<kind>/v1\n" + file bytes`; verification before parsing; the public key pinned in the client; configuration serials never accepted lower than one already seen; key rotation signed by the old key.
+
+**Acceptance criteria**
+- [ ] P9's seven cases as unit tests, plus rollback and rotation tests.
+- [ ] `cryptography` declared as a dependency.
+
+**Blocked by:** {#ad-1}
+'''
+
+[[issues]]
+key = "round-log"
+title = "Round log client: signed entries appended with conditional commits"
+labels = ["type: feature", "area: protocol", "priority: high", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture sections 6.2 and 6.3]({blob}docs/ARCHITECTURE.md); prototype P4 ([result]({blob}results/prototypes/p4_log_writers.md)): exactly one winner in 10 of 10 races; losers refused with **409 or 412**; about 2.4 attempts per accepted entry with 3 concurrent writers. The free plan allows 128 commit-creation requests per hour per account ([first attempt]({blob}results/prototypes/p4_attempt1_rate_limit.md)).
+
+**Task:** append entries with `parent_commit`; retry on 409 and 412 after a short random wait; stagger appends per member; count commit attempts per hour and back off on 429; read and verify entries (signatures, member list).
+
+**Acceptance criteria**
+- [ ] Unit tests with a fake host (no network) for retries, staggering and the attempt budget.
+- [ ] One integration test against a private test repository, run manually (not in CI).
+
+**Blocked by:** {#protocol-spec}, {#signing}, {#ad-2}
+'''
+
+[[issues]]
+key = "close-publish"
+title = "Closing a round, the counted set, and the designated publisher"
+labels = ["type: feature", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture sections 3, 6.4 and 6.6]({blob}docs/ARCHITECTURE.md): the first successful close commit fixes S_t; the counted set is fixed by the log, never by what a peer downloaded; the publisher order is SHA-256(run seed, t, member ID) with a grace-time fallback.
+
+**Acceptance criteria**
+- [ ] Close, counted-set and publisher-order logic as pure functions with tests.
+- [ ] A peer that cannot fetch a counted update retries, then adopts the checkpoint; it never merges a subset (test).
+
+**Blocked by:** {#round-log}
+'''
+
+[[issues]]
+key = "storage"
+title = "Roadmap 3.4: storage and transport interface with Hub repository and bucket backends"
+labels = ["type: feature", "area: storage", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture sections 5 and 10]({blob}docs/ARCHITECTURE.md): one transport interface (put, get, list a prefix, append a log entry with a parent); updates and checkpoints cut by part; manifest written last; P4 saw 50-file commits applied atomically; a free organisation can create buckets (P0).
+
+**Acceptance criteria**
+- [ ] The interface plus a Hub repository backend and a bucket backend.
+- [ ] Readers never use files without a matching manifest (tests).
+- [ ] Only safetensors and JSON are read from hosts; nothing is unpickled or executed.
+
+**Blocked by:** {#protocol-spec}, {#ad-3}
+'''
+
+[[issues]]
+key = "update-size"
+title = "Make updates smaller: bf16, compression, sliced units; measure against home links"
+labels = ["type: research", "area: storage", "area: merge", "priority: high"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** approved plan change of 2026-10-14 (D42): update size is a Phase 3 design constraint. From one home, 8.4 Mbit/s up and 13.2 down; a 100M to 300M model in float32 is 0.4 to 1.2 GB per full update. System study Q10 covers update sizes and compression in the literature.
+
+**Task:** measure, on Stage 0's Task B model and checkpoints, the size and merge-quality effect of: bf16 updates; deltas with standard compression; sliced units (shared part plus held experts). Report upload time at the measured link speed.
+
+**Acceptance criteria**
+- [ ] A plan document before runs; a results table in `results/`.
+- [ ] A recommendation for {#ad-7} and {#ad-13}, labelled as inference where it is.
+'''
+
+[[issues]]
+key = "merge-files"
+title = "Merge from downloaded files on the CPU, with input validation and agreement hashes"
+labels = ["type: feature", "area: merge", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture section 7]({blob}docs/ARCHITECTURE.md): results in member-ID order; IEEE division in float64; outer state stored as float64; merge on the CPU (0.3 to 1.1 s at 46M parameters, P6); every peer validates updates identically (manifest match, names and shapes, finite values, positive example count) and posts part hashes.
+
+**Acceptance criteria**
+- [ ] Merge from file-backed states (as P6 did) with validation; invalid updates excluded identically.
+- [ ] Part hashes posted; mismatch handling as in section 7.2.
+
+**Blocked by:** {#merge-division-bug}, {#hashes-pkg}, {#ad-7}
+'''
+
+[[issues]]
+key = "round-driver"
+title = "Round driver: synchronous mode (D38) and deadline-quorum mode (D39)"
+labels = ["type: feature", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture sections 6.1, 6.4, 6.5 and 8]({blob}docs/ARCHITECTURE.md): present set from ready entries; deterministic assignment from run seed, round and present set (`assign_slices`, rolling policy, 2 holders per expert); deadline close with Q_min; synchronous close with an abort timeout; late peers adopt the checkpoint.
+
+**Acceptance criteria**
+- [ ] Both modes in code with simulated-peer tests (no network), including late and missing peers.
+- [ ] Holder-count rule steps 1 to 5 implemented and tested.
+
+**Blocked by:** {#close-publish}, {#ad-5}, {#ad-6}, {#ad-9}
+'''
+
+[[issues]]
+key = "client-core"
+title = "Roadmap 3.3a: the cassandra-chorus client: setup, capacity report, download, train, upload"
+labels = ["type: feature", "area: client", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.3. The existing training loop and worker (`cassandra_chorus/train`, `cassandra_chorus/sim/worker.py`) train one work unit; the client wraps them for real rounds.
+
+**Task:** a `cassandra-chorus` command: member key generation; GPU detection and capacity report; joining a run from a signed configuration; downloading the start state (or slice); training H steps; uploading the update with its manifest; posting the entry.
+
+**Acceptance criteria**
+- [ ] One full round against a private test repository on one machine.
+- [ ] Keep-awake and power logging from `cassandra_chorus.ops` used during training.
+
+**Blocked by:** {#storage}, {#round-log}, {#signing}
+'''
+
+[[issues]]
+key = "client-auto"
+title = "Roadmap 3.3b: client auto mode, resume after interruption, usage limits"
+labels = ["type: feature", "area: client", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.3: auto mode (the next work unit after each merge), resume after interruption, usage limits (hours, GPU share).
+
+**Acceptance criteria**
+- [ ] Auto mode runs several rounds unattended.
+- [ ] Killing the client mid-round and restarting it resumes or adopts the checkpoint correctly (test).
+- [ ] Usage limits configurable and respected.
+
+**Blocked by:** {#client-core}, {#round-driver}
+'''
+
+[[issues]]
+key = "status-page"
+title = "Status page rendered from the round log"
+labels = ["type: feature", "area: client", "priority: low", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.2: run logs and a status page any peer can render; architecture section 7.2: hash mismatches show on the status page.
+
+**Acceptance criteria**
+- [ ] A static page (or terminal view) of rounds, members, counted sets, lateness, holders per expert, hash agreement.
+
+**Blocked by:** {#round-log}
+'''
+
+[[issues]]
+key = "churn-tests"
+title = "Failure and churn tests for the architecture's failure table"
+labels = ["type: feature", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** [architecture section 11]({blob}docs/ARCHITECTURE.md) lists 13 failure events and the intended behaviour.
+
+**Acceptance criteria**
+- [ ] One automated test per row (simulated peers and a fake host), or a stated reason it cannot be automated.
+
+**Blocked by:** {#round-driver}
+'''
+
+[[issues]]
+key = "second-machine"
+title = "Get a second machine for Gate N1a and cross-machine tests"
+labels = ["type: task", "area: ops", "priority: high", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Context:** approved plan change of 2026-10-14 (D42): a second machine is needed before Gate N1a, earlier than the roadmap first said. It also answers what one laptop cannot: whether merges match bit for bit across machines, whether a second account can write the shared log, and upload speeds from another home.
+
+**Acceptance criteria**
+- [ ] A second machine (a teammate's or a friend's PC with an NVIDIA GPU, Windows or Linux) available for scheduled tests.
+- [ ] Its owner has a Hugging Face account for the second-account test.
+'''
+
+[[issues]]
+key = "p6-cross"
+title = "Cross-machine merge determinism (P6 on a second machine)"
+labels = ["type: experiment", "area: merge", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** P6 showed bitwise-stable CPU merges on one machine ([result]({blob}results/prototypes/p6_merge_determinism.md)). Equal hashes on one machine are necessary, not sufficient.
+
+**Task:** run `scripts/proto/p6_merge_determinism.py` on the second machine and compare its baseline hashes with the reference laptop's (they are in the result JSON).
+
+**Acceptance criteria**
+- [ ] A result file; bitwise equal or the size of the differences.
+
+**Blocked by:** {#second-machine}. **Feeds:** {#ad-8}.
+'''
+
+[[issues]]
+key = "p0-second-account"
+title = "Second-account write access to the shared round log"
+labels = ["type: experiment", "area: security", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** P0 showed what a `repo.contribute.write` token can do on repositories its own account creates ([result]({blob}results/prototypes/p0_hub_scope_probe.md)). D40's shared log needs several accounts to write one repository.
+
+**Task:** with a second account, test which token scope and organisation role lets it append to a log repository created by the owner's account, and nothing more.
+
+**Acceptance criteria**
+- [ ] The narrowest working setup documented; what that account could also delete or overwrite.
+
+**Blocked by:** {#second-machine}, {#ad-2}
+'''
+
+[[issues]]
+key = "n1a-prereg"
+title = "Gate N1a pre-registration (written before its first run)"
+labels = ["type: docs", "area: training", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.5: full-model averaging and a sliced run (2 holders per expert) on Task B across two real machines land within seed noise of the simulated result for the same configuration. Stage 0 is the reference. Gates are written before the runs they judge (principle 3).
+
+**Acceptance criteria**
+- [ ] Configurations, seeds, the "seed noise" criterion, and what counts as a pass, written and approved by the owner before any N1a run.
+
+**Blocked by:** {#ad-6}
+'''
+
+[[issues]]
+key = "n1a-run"
+title = "Gate N1a run: synchronous mode across two machines against the Stage 0 simulation"
+labels = ["type: experiment", "area: training", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.5.
+
+**Acceptance criteria**
+- [ ] Runs as pre-registered; a result file and a `RESULTS.md` entry stating hardware, scale, seeds and what was not tested.
+- [ ] Gate decision recorded by the owner.
+
+**Blocked by:** {#n1a-prereg}, {#client-auto}, {#merge-files}, {#second-machine}
+'''
+
+[[issues]]
+key = "p7"
+title = "P7: deadline-quorum rounds simulated in the Stage 0 harness, with churn and holder drops"
+labels = ["type: experiment", "area: training", "area: protocol", "priority: medium"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** system study section 6 (P7) and section 5: nothing tests deadline-quorum averaging with 3 to 5 peers or holder groups; Gate N1b needs it first. Needs several days of GPU time on one machine.
+
+**Task:** add deadline-quorum rounds, a replayable churn schedule (including mid-round departures) and injected 2-to-1 and 2-to-0 holder drops to the simulation harness; compare with the synchronous mode and centralized training at equal compute on seeds 7, 11 and 19.
+
+**Acceptance criteria**
+- [ ] A plan document with the reading registered before runs; results and a `RESULTS.md` entry.
+
+**Feeds:** {#ad-5}, {#ad-12}.
+'''
+
+[[issues]]
+key = "n1b-prereg"
+title = "Gate N1b pre-registration (written before its first run)"
+labels = ["type: docs", "area: training", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.6; draft in [architecture section 14]({blob}docs/ARCHITECTURE.md).
+
+**Acceptance criteria**
+- [ ] The pre-registration complete (method, comparisons, readings, churn schedule, recorded quantities, allowance) and approved by the owner.
+
+**Blocked by:** {#ad-12}, {#ad-5}, {#p7}
+'''
+
+[[issues]]
+key = "n1b-run"
+title = "Gate N1b run: deadline-quorum averaging at the pilot's scale"
+labels = ["type: experiment", "area: training", "area: protocol", "priority: medium", "status: blocked"]
+milestone = "Phase 3: Network v0 on our machines"
+body = '''
+**Context:** roadmap 3.6.
+
+**Acceptance criteria**
+- [ ] Runs as pre-registered; result file and `RESULTS.md` entry; gate decision recorded by the owner.
+
+**Blocked by:** {#n1b-prereg}, {#n1a-run}
+'''
+
+[[issues]]
+key = "hf-enquiry"
+title = "Ask Hugging Face whether per-round commits count as \"excessive bulk activity\""
+labels = ["type: task", "area: storage", "priority: medium", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Context:** system study Q5 and section 6 (P5): the Hub's terms count "excessive bulk activity" as abuse, and commit limits are not documented (P4 found 128 commit-creation requests per hour on the free plan). The pilot would commit every round from several accounts.
+
+**Task:** a short written enquiry to Hugging Face describing the planned pattern (rounds, commits per member and hour, file sizes). Sent in the owner's name; Claude can draft it.
+
+**Acceptance criteria**
+- [ ] Enquiry sent; the answer summarised here and in architecture section 9.
+'''
+
+[[issues]]
+key = "p5-week"
+title = "P5: a week at the planned commit rate (deferred)"
+labels = ["type: experiment", "area: storage", "priority: low", "status: deferred", "status: needs owner"]
+milestone = "Phase 3: Network v0 on our machines"
+assignees = ["owner"]
+body = '''
+**Context:** deferred by the owner on 2026-10-14 (D43). The script is written and its scheduling is unit-tested ([`scripts/proto/p5_commit_rate.py`]({blob}scripts/proto/p5_commit_rate.py)): 30-minute rounds, 12 commits per round from one account (24 per hour, under the 128 limit), resumable, gaps recorded as data. Keep-awake keeps the screen on; a week needs the laptop plugged in.
+
+**Acceptance criteria**
+- [ ] Run (when the owner decides), finish with `--finish` (squash and time it), results committed.
+
+**Related:** {#hf-enquiry}
+'''
+
+# ================================================================ Phase 4
+
+[[issues]]
+key = "recruit-pilot"
+title = "Recruit and onboard 3 to 5 pilot participants"
+labels = ["type: task", "area: process", "priority: low", "status: needs owner"]
+milestone = "Phase 4: Friends pilot"
+assignees = ["owner"]
+body = '''
+**Context:** D36: 3 to 5 trusted people with consumer GPUs. D40: each writes their own repositories plus signed log entries; later they become maintainers.
+
+**Acceptance criteria**
+- [ ] Participants named in a signed run configuration, each with a member key and a scoped Hub token.
+- [ ] Each has run the installer and one test round.
+'''
+
+[[issues]]
+key = "installer"
+title = "Roadmap 4.1a: installer and instructions for Windows and Linux (NVIDIA first)"
+labels = ["type: feature", "area: client", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** roadmap 4.1; P8 showed the candidate libraries install and import natively on Windows ([result]({blob}results/prototypes/p8_windows_installs.md)).
+
+**Acceptance criteria**
+- [ ] A signed release that installs on a clean Windows and a clean Linux machine, with written instructions.
+
+**Blocked by:** {#client-auto}, {#signing}
+'''
+
+[[issues]]
+key = "dashboard"
+title = "Roadmap 4.1b: contributor dashboard"
+labels = ["type: feature", "area: client", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** roadmap 4.1: what each contributor sees (their rounds, compute given, the run's progress).
+
+**Blocked by:** {#status-page}
+'''
+
+[[issues]]
+key = "pool-batch1"
+title = "Roadmap 4.2a: first research pool: averaging-gap batch 1 (runs B1-1 to B1-5) on the network"
+labels = ["type: experiment", "area: training", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** D33: batch 1 moved to the network as the first research pool. Code is on `main` (`configs/queues/sweeps_batch1.toml`); plan in [`docs/implementations/2026-10-13-averaging-gap-batch-1.md`]({blob}docs/implementations/2026-10-13-averaging-gap-batch-1.md).
+
+**Acceptance criteria**
+- [ ] The five runs across machines, results and a `RESULTS.md` entry as the batch-1 plan specifies.
+
+**Blocked by:** {#n1a-run}
+'''
+
+[[issues]]
+key = "pool-h-sweep"
+title = "Roadmap 4.2b: research pool: H sweep and keeping against resetting AdamW state"
+labels = ["type: experiment", "area: training", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** roadmap 4.2 and the Stage 0 literature report. Keeping AdamW state across rounds is not supported today (D19 makes it fresh each round), so it needs code first.
+
+**Acceptance criteria**
+- [ ] A plan document with the reading registered; the AdamW-keep option implemented and tested; results.
+
+**Blocked by:** {#pool-batch1}
+'''
+
+[[issues]]
+key = "gate-n2-allowance"
+title = "Decision: the allowance for Gate N2 (distributed against centralized)"
+labels = ["type: decision", "area: training", "priority: low", "status: needs owner"]
+milestone = "Phase 4: Friends pilot"
+assignees = ["owner"]
+body = '''
+**Decision needed by:** before pilot pretraining (roadmap 4.3) starts.
+
+**Context:** roadmap 4.4 and its decisions table: the distributed model must be within an allowance, fixed before the run, of the centralized reference at equal compute.
+
+**How to record it:** comment here; it becomes an SRS D-number.
+'''
+
+[[issues]]
+key = "pilot-pretrain"
+title = "Roadmap 4.3: pilot pretraining of the English and Turkish model, plus a centralized reference"
+labels = ["type: experiment", "area: training", "area: model", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** roadmap 4.3: about 100M to 300M parameters (to be set by OD-6 and the update-size results), plus a smaller centralized reference (SRS S2-03).
+
+**Blocked by:** {#od-6}, {#shards}, {#n1b-run}, {#gate-n2-allowance}, {#recruit-pilot}
+'''
+
+[[issues]]
+key = "gate-n2"
+title = "Roadmap 4.4: Gate N2 run and decision"
+labels = ["type: experiment", "area: training", "priority: low", "status: blocked"]
+milestone = "Phase 4: Friends pilot"
+body = '''
+**Context:** roadmap 4.4: within the pre-registered allowance of the centralized reference at equal compute, and the system survives worker dropouts.
+
+**Blocked by:** {#pilot-pretrain}
+'''
+
+[[issues]]
+key = "maintainers"
+title = "Move from owner-held write access to a group of trusted maintainers (D40)"
+labels = ["type: task", "area: process", "area: security", "priority: low", "status: needs owner"]
+milestone = "Phase 4: Friends pilot"
+assignees = ["owner"]
+body = '''
+**Context:** D40: for later scaling milestones the pilot participants become maintainers, and only that group writes shared state, so the network never depends on one person. Relates to whether maintainers co-sign ({#ad-1}).
+
+**Acceptance criteria**
+- [ ] Maintainer group defined; who may sign, write the log and change configurations documented and applied.
+'''
+
+# ================================================================ Phase 5
+
+[[issues]]
+key = "sandbox-gen"
+title = "Roadmap 5.1a: sandbox world generator, task generator and reference solver (English and Turkish)"
+labels = ["type: feature", "area: sandbox", "priority: low", "status: blocked"]
+milestone = "Phase 5: Assistant post-training"
+body = '''
+**Context:** product spec (#20) section 4: reproducible worlds from a seed; requests from templates and grammars in both languages (Turkish dates, agglutinative forms, registers); a deterministic reference solver for the correct end state.
+
+**Note:** the roadmap allows the sandbox to be built before Phase 4 finishes.
+
+**Blocked by:** {#od-1}, {#od-2}
+'''
+
+[[issues]]
+key = "sandbox-checker"
+title = "Roadmap 5.1b: episode runner, checker and held-out benchmark, including adversarial emails"
+labels = ["type: feature", "area: sandbox", "area: security", "priority: low", "status: blocked"]
+milestone = "Phase 5: Assistant post-training"
+body = '''
+**Context:** product spec (#20) sections 4, 8 and 9: the checker compares the end state with the reference, checks the reply, confirmation of irreversible actions and reply language; adversarial emails test that instructions inside content are never obeyed; results reported per language.
+
+**Blocked by:** {#sandbox-gen}
+'''
+
+[[issues]]
+key = "sft"
+title = "Roadmap 5.2: SFT data generated by our own code; SFT; evaluation"
+labels = ["type: experiment", "area: training", "priority: low", "status: blocked"]
+milestone = "Phase 5: Assistant post-training"
+body = '''
+**Context:** product spec (#20) section 5: loss on the assistant's turns and tool calls only; data from the sandbox only (D32), plus volunteer-written text if OD-5 allows.
+
+**Blocked by:** {#sandbox-checker}, {#od-5}, {#pilot-pretrain}, {#od-8}
+'''
+
+[[issues]]
+key = "rl"
+title = "Roadmap 5.3: reinforcement learning with checkable rewards from the sandbox"
+labels = ["type: experiment", "area: training", "priority: low", "status: blocked"]
+milestone = "Phase 5: Assistant post-training"
+body = '''
+**Context:** product spec (#20) section 5: maximise the checker's reward; penalties for unconfirmed irreversible actions and unrequested changes; algorithm chosen in this step.
+
+**Blocked by:** {#sft}
+'''
+
+[[issues]]
+key = "local-inference"
+title = "Roadmap 5.4: local inference, quantization, and a demo that confirms before acting"
+labels = ["type: feature", "area: inference", "priority: low", "status: blocked"]
+milestone = "Phase 5: Assistant post-training"
+body = '''
+**Context:** product spec (#20) sections 2 and 8: the tool layer runs locally and enforces confirmation; every tool call is shown to the user.
+
+**Blocked by:** {#od-6}, {#rl}, {#od-10}
+'''
+
+# ================================================================ Phase 6
+
+[[issues]]
+key = "threat-model"
+title = "Roadmap 6.1: threat model, checks on submitted work, merges that resist poisoned updates"
+labels = ["type: epic", "area: security", "area: merge", "priority: low"]
+milestone = "Phase 6: Open pool"
+body = '''
+**Context:** roadmap 6.1; [architecture section 13]({blob}docs/ARCHITECTURE.md): the pilot trusts its members; strangers need update-quality checks, rate limits, Sybil resistance and probably a different record of the counted set (the system study flags a ledger as the main candidate, against R2).
+
+**To split** into issues when Phase 6 is planned.
+'''
+
+[[issues]]
+key = "accounts-gui"
+title = "Roadmap 6.2: accounts, contribution ledger, leaderboard, GUI app"
+labels = ["type: epic", "area: client", "priority: low"]
+milestone = "Phase 6: Open pool"
+body = '''
+**Context:** roadmap 6.2 and the platform vision (CLI and GUI client, auto mode).
+
+**To split** into issues when Phase 6 is planned.
+'''
+
+[[issues]]
+key = "ablation-pools"
+title = "Roadmap 6.3: weekly ablation pools and skill experts for the CASSANDRA flagship"
+labels = ["type: epic", "area: training", "priority: low"]
+milestone = "Phase 6: Open pool"
+body = '''
+**Context:** roadmap 6.3; D30: the CASSANDRA flagship is a separate model, served later by Chorus's ablation pools and skill experts.
+
+**To split** into issues when Phase 6 is planned.
+'''
+
+[[issues]]
+key = "permissionless"
+title = "Roadmap 6.4: permissionless participation"
+labels = ["type: epic", "area: security", "area: process", "priority: low", "status: blocked"]
+milestone = "Phase 6: Open pool"
+body = '''
+**Context:** roadmap 6.4: anyone may join without an invitation, once 6.1 is in place.
+
+**Blocked by:** {#threat-model}
+'''
+
+# ================================================================ Research track
+
+[[issues]]
+key = "home-survey"
+title = "P1 and P2: home network census and pairwise connection tests (for direct peer links)"
+labels = ["type: experiment", "area: storage", "priority: low", "status: deferred"]
+milestone = "Research track"
+body = '''
+**Context:** system study section 6 (P1, P2); not scheduled (D41). Only relevant if direct peer-to-peer transfer (the study's Option C) is wanted on top of the bulletin board; [architecture section 10]({blob}docs/ARCHITECTURE.md) keeps the transport behind one interface for that. iroh and libp2p install and import on Windows (P8).
+
+**Task when scheduled:** P1, each pilot home's NAT and reachability; P2, pairwise connections with our own relay only (D37), and a 0.6 GB transfer direct and relayed.
+'''
+
+[[issues]]
+key = "rescoring"
+title = "Stage 0 re-scoring run (strided test evaluation)"
+labels = ["type: experiment", "area: training", "priority: low", "status: needs owner"]
+milestone = "Research track"
+assignees = ["owner"]
+body = '''
+**Context:** approved by the owner for an evening session on 2026-10-13; not yet run. `scripts/rescore_task_b.py` is on `main` and resumable through `results/task_b_rescore.json`; it checks the logged test bpc within 1e-6. See [`docs/implementations/2026-10-13-averaging-gap-batch-1.md`]({blob}docs/implementations/2026-10-13-averaging-gap-batch-1.md).
+
+**Acceptance criteria**
+- [ ] Run on the reference laptop (visible launcher, screen on); results committed with a `RESULTS.md` entry.
+'''
+
+[[issues]]
+key = "sliced-remedies"
+title = "Research: remedies for the sliced-MoE costs (masked routing, partial updates)"
+labels = ["type: research", "area: model", "area: merge", "priority: low"]
+milestone = "Research track"
+body = '''
+**Context:** Stage 0 measured +10.8% for the sliced arm on Task B: local averaging +6.1, partial updates +1.4, masked routing +3.2 ([Stage 0 report]({blob}docs/stage0-report.md); [literature report]({blob}docs/research/2026-10-11-stage0-literature-report.md)). Each remedy becomes a research pool with its own plan and pre-registered reading.
+
+**Task:** a short list of candidate remedies from the literature report with what each would need; to be split into research pools.
+'''
+
+[[issues]]
+key = "lit-gaps"
+title = "Research: turn the literature report's open gaps into research-pool proposals"
+labels = ["type: research", "area: training", "priority: low"]
+milestone = "Research track"
+body = '''
+**Context:** roadmap research track: "anything the gaps section of the literature report lists" ([literature report]({blob}docs/research/2026-10-11-stage0-literature-report.md)).
+
+**Acceptance criteria**
+- [ ] One proposal per gap: question, the runs it needs, the reading registered before running.
+'''
+
+# ================================================================ Housekeeping and process (Stage 0 loose ends)
+
+[[issues]]
+key = "backup-runs"
+title = "Back up the Stage 0 run logs (the only copy is on the reference laptop)"
+labels = ["type: task", "area: ops", "priority: medium", "status: needs owner"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** [Stage 0 close-out]({blob}docs/stage0-closeout.md), sections 4 and 5: the run folder on the reference laptop (66 run folders, about 5.2 GB) is the only copy of Stage 0's run logs.
+
+**Acceptance criteria**
+- [ ] A copy on a second medium or storage the owner chooses; its location noted (privately if needed).
+'''
+
+[[issues]]
+key = "local-cleanup"
+title = "Clean up local worktrees, merged branches and bundles on the reference laptop"
+labels = ["type: task", "area: ops", "priority: low", "status: needs owner"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** [Stage 0 close-out]({blob}docs/stage0-closeout.md) section 5: an old worktree (`stage0-next`), merged local branches and git bundles remain. Since 2026-10-14 there is also a leftover `.git/worktrees/architecture` folder that Windows refused to delete (probably a OneDrive lock), and the `assistant-spec` worktree, which can go once #20 is merged.
+
+**Acceptance criteria**
+- [ ] `git worktree list` shows only the main working tree; merged branches deleted locally; bundles kept or deleted by the owner's choice.
+'''
+
+[[issues]]
+key = "proposal-brief"
+title = "Proposal brief for the collaborator at ODTU and her academic advisor"
+labels = ["type: docs", "area: process", "priority: low", "status: needs owner"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** [Stage 0 close-out]({blob}docs/stage0-closeout.md) section 5, item 3: a brief written from the Stage 0 report, now updated with the roadmap and the approved architecture.
+
+**Acceptance criteria**
+- [ ] A short brief the owner can send; claims traceable to the reports; no novelty claims.
+'''
+
+[[issues]]
+key = "outside-review"
+title = "Have someone outside the project review the Stage 0 report"
+labels = ["type: task", "area: process", "priority: low", "status: needs owner", "help wanted"]
+milestone = "Housekeeping and process"
+assignees = ["owner"]
+body = '''
+**Context:** [Stage 0 close-out]({blob}docs/stage0-closeout.md) section 5, item 4; [Stage 0 report]({blob}docs/stage0-report.md).
+
+**Acceptance criteria**
+- [ ] A reviewer found; their comments collected here; fixes made in a PR.
+'''

@@ -1,0 +1,43 @@
+name: Task or feature
+description: Planned work (code, docs, setup, runs). One assignable unit.
+labels: ["type: task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        One issue per assignable unit of work. Change the type label to `type: feature` for a new capability in code. Add an `area:` and a `priority:` label. See CONTRIBUTING.md.
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why this is needed. Link the roadmap step, architecture section, SRS decision or issue it comes from (full URLs).
+    validations:
+      required: true
+  - type: textarea
+    id: task
+    attributes:
+      label: Task
+      description: What to do.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Checkable conditions for done.
+      value: |
+        - [ ]
+        - [ ] Implementation document in docs/implementations/ (for meaningful changes)
+        - [ ] Tests pass (python -m pytest)
+    validations:
+      required: true
+  - type: textarea
+    id: not-covered
+    attributes:
+      label: Not covered
+      description: What this deliberately leaves out.
+  - type: input
+    id: blocked-by
+    attributes:
+      label: Blocked by
+      description: Issue numbers this waits on, for example "#57, #61". Add the `status: blocked` label if any are open.
