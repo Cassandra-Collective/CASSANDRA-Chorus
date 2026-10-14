@@ -126,6 +126,7 @@ Nothing in this outline needs a server, a peer-to-peer connection or a relay. It
   - a reader never uses an update or checkpoint without its manifest;
   - the manifest lists every file's SHA-256 and size, and is uploaded last;
   - a file that does not match its manifest is treated as missing (study Q5: Psyche's and Templar's atomic markers).
+  - On a Hub repository, an update's files and manifest can go in **one commit**. P4 never saw a 50-file commit partly applied, so the manifest-last rule matters mainly for buckets, which have no commits.
 - **Rule:**
   - only safetensors and JSON are ever read from the hosts;
   - nothing fetched is unpickled, imported or executed (R9; study Q7, Q8).
@@ -170,17 +171,22 @@ How a peer reads "at T_t" is **inference**: from the log's tree at the first com
 
 **Rule:**
 - a member appends with `create_commit(..., parent_commit=<the head it last read>)`;
-- on rejection it re-reads the head and retries;
+- on **409 Conflict or 412 Precondition Failed** it re-reads the head and retries, after a short random wait;
 - an entry is never modified or deleted, and every entry's path is new.
 
-The Hub documents that such a commit "will fail if `revision` does not point to `parent_commit`" (study Q3, `hf_api.py`). P0 showed the **server** refusing a commit with a stale parent: HTTP 412 Precondition Failed, with one writer. Whether that holds when several writers commit at the same instant is **P4's question (waits on P4)**. If it does not, this design needs a different record of the counted set (study Q3, candidates 3 to 5).
+The Hub documents that such a commit "will fail if `revision` does not point to `parent_commit`" (study Q3, `hf_api.py`). **P4 (2026-10-14, one account, writers as separate processes on one machine)** found:
+- the server enforces it under concurrency: in 10 of 10 trials where 5 writers committed the same new path on the same parent within a few milliseconds, exactly one succeeded and the file held its content;
+- the others were refused, with 409 Conflict when another commit was in flight and 412 once the parent was stale;
+- 3 writers appending concurrently lost and duplicated nothing, at about 2.4 attempts per accepted entry (`results/prototypes/p4_log_writers.md`).
+
+Not yet tested with writers on different accounts and homes.
 
 ### 6.4 Closing and the counted set
 
 **Rule.** In **deadline mode** (D39):
 - any member may close round t once T_t + D has passed by its clock;
 - the close entry lists every valid posted entry for t in the tree of its parent commit;
-- the first successful close is the only close; a later close commit for the same round is ignored;
+- the first successful close is the only close; a later close commit for the same round is ignored (P4: concurrent closes on one parent yield exactly one success);
 - S_t is exactly the list in that close entry.
 
 **Rule. The counted set is fixed by the log, not by what a peer managed to download.**
@@ -429,7 +435,7 @@ The roadmap places the Gate N1b definition in step 1.3. This is a draft for the 
 |---|---|---|
 | P0 token scope probe | 4, 5 | done: organisation repositories and buckets yes, personal namespace no; stale parent refused with 412 |
 | P3 transfers from this home | 5, 9, AD-11 | smoke test done (8.4 Mbit/s up, 13.2 down); full run's size waits for the owner |
-| P4 concurrent log writers | 6.1, 6.2, 6.3, 6.4 | first attempt stopped by the 128-per-hour commit limit; rerun pending |
+| P4 concurrent log writers | 6.1, 6.2, 6.3, 6.4 | done on one account: exactly one winner in 10 of 10 races; atomic 50-file commits; no lost appends; 409 and 412 both mean "retry". First attempt found the 128-per-hour commit limit |
 | P5 a week at the planned rate | 6.2, 9 | not yet run |
 | P6 merge determinism | 7, AD-7, AD-8 | done on one machine at full scale |
 | P8 Windows installs | 10, 12 | awaiting the owner's approval of the package list |
