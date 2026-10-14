@@ -66,9 +66,16 @@ The derivations are in `docs/implementations/2026-10-14-solo-prototypes.md` and 
 
 ## Verification
 
-- Every number from the prototypes in the draft was checked against the prototype outputs of 2026-10-14:
+- Every number from the prototypes in the draft was checked against the prototype outputs of 2026-10-14 (branch `proto/solo-prototypes`, commit `601f898`):
   - the CUDA division count (6,679,936 of 10 million);
-  - the toy-scale P6 counts (1; 114 and 96; 219 and 325);
+  - P6 at full scale:
+    - GPU: 472 and 526 differing elements, largest 5.96e-08;
+    - float32 velocity: 204,432 and 132,276;
+    - direct deltas: 355,790 and 499,977;
+    - merge time: 0.3 to 1.1 s;
+  - P0's steps;
+  - the commit and API limits from P4's first attempt;
+  - the P3 smoke-test rates;
   - P9's seven cases.
 - Statements from the study were checked against its report sections as cited: Q3, Q5, Q6, Q7, Q8 and 4.1.
 - SRS references were checked: D11 is the router-row rule, and the merge requirements are S0-F-08 to S0-F-10.

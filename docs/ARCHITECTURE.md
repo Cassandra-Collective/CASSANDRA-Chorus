@@ -98,7 +98,13 @@ Nothing in this outline needs a server, a peer-to-peer connection or a relay. It
   - Not tested.
 - **Host accounts.**
   - Each member uses their own Hugging Face account and a fine-grained token. Under R7 the token writes the member's own repositories plus the round log.
-  - What a token with only the organisation permission `repo.contribute.write` can do is measured by P0. Whether any token can write the log repository that another account created needs a second account (**Waits on P0 and a friend's account**).
+  - **P0 (2026-10-14):** a fine-grained token whose only permission is `repo.contribute.write` on the organisation could:
+    - create, write, read, branch and delete private repositories in that organisation;
+    - create and use a private Storage Bucket there (on the free plan);
+    - but not create anything in its owner's personal namespace (HTTP 403).
+
+    So each member's own update repositories fit such a token (`results/prototypes/p0_hub_scope_probe.md`).
+  - Whether a token can write the log repository that **another** account created needs a second account (**waits on a friend's account**).
   - Whether the log sits in an organisation of its own is AD-2.
 
 ## 5. Shared state: what lives where
@@ -108,7 +114,7 @@ Nothing in this outline needs a server, a peer-to-peer connection or a relay. It
 | Run configuration | config repository, `run-config.json` plus `.sig`; mirrored as a GitHub release asset | owner only | JSON plus signature file | every serial |
 | Client releases | GitHub releases of the project repository: archive, manifest, `.sig` | owner only (signs offline; uploads from any machine) | zip, JSON, signature | every release |
 | Round log | one branch of one Hub repository (AD-2: in its own organisation) | members, by conditional commit | one JSON file per entry plus its `.sig`, added in one commit | the run; squashed or rotated per section 9 |
-| Updates | each member's own repository (or Storage Bucket, **waits on P0 and P3**) | that member only | per round: `shared.safetensors`, one `L<l>E<e>.safetensors` per held expert, and `manifest.json` written last | until the round's checkpoint is mirrored; the member deletes older rounds |
+| Updates | each member's own repository or Storage Bucket (a free organisation can create buckets, P0; buckets are not git repositories, so their uploads are presumably outside the commit limit, not yet confirmed; **waits on P3**) | that member only | per round: `shared.safetensors`, one `L<l>E<e>.safetensors` per held expert, and `manifest.json` written last | until the round's checkpoint is mirrored; the member deletes older rounds |
 | Checkpoints | the publisher's own repository; mirrored to a second host (AD-3) | the round's publisher | the same part files as updates, plus `optimizer/` (outer state, float64) and `manifest.json` written last | every round's pointer; files of every k-th round (AD-4) |
 
 - **Parts.** A model is cut into parts:
@@ -155,6 +161,11 @@ How a peer reads "at T_t" is **inference**: from the log's tree at the first com
 
 **Commit rate (inference).** With the combined entry, a round costs one commit per member plus one close and one checkpoint. At 5 members and 30-minute rounds that is 7 per round, 336 per day to the log repository. **P5 runs this rate for a week (waits on P5).**
 
+**Commit budget.** P4's first attempt (2026-10-14) hit the Hub's free-plan limit, in the response text: "rate limit for repository commit creation (128 per hour)". It was reached after about 41 to 45 accepted commits, so rejected conditional commits very likely count (`results/prototypes/p4_attempt1_rate_limit.md`). Every response also reports a general API limit of 1,000 requests per 300 s.
+- **Rule:** the protocol budgets commit **attempts**, not commits, per member account and hour. At 30-minute rounds a member makes about 2 to 4 attempts per round, far below 128 per hour. Retries after conflicts are what can exhaust the budget.
+- **Rule:** members stagger their appends by a member-specific offset (for example, a hash of the member ID modulo a minute), so that entries posted near the deadline rarely collide.
+- **Rule:** a 429 is a back-off signal, never a reason to drop an entry. An entry that cannot be posted before the close is simply late.
+
 ### 6.3 Appending
 
 **Rule:**
@@ -162,7 +173,7 @@ How a peer reads "at T_t" is **inference**: from the log's tree at the first com
 - on rejection it re-reads the head and retries;
 - an entry is never modified or deleted, and every entry's path is new.
 
-The Hub documents that such a commit "will fail if `revision` does not point to `parent_commit`" (study Q3, `hf_api.py`). Whether the server enforces it under concurrent writers is **P4's question (waits on P4)**. If it does not, this design needs a different record of the counted set (study Q3, candidates 3 to 5).
+The Hub documents that such a commit "will fail if `revision` does not point to `parent_commit`" (study Q3, `hf_api.py`). P0 showed the **server** refusing a commit with a stale parent: HTTP 412 Precondition Failed, with one writer. Whether that holds when several writers commit at the same instant is **P4's question (waits on P4)**. If it does not, this design needs a different record of the counted set (study Q3, candidates 3 to 5).
 
 ### 6.4 Closing and the counted set
 
@@ -224,19 +235,20 @@ The timeout is what flwr-serverless's synchronous mode lacks (study 4.1).
    - an entry with no contributor keeps its value and its outer state.
 4. **Division. Rule:** the division in step 3 is IEEE division in float64 on every device.
    - **P6 finding (2026-10-14, PyTorch 2.12.1+cu126):** dividing by a Python number on CUDA multiplies by its reciprocal. On 10 million random float64 values this gave results identical to the CPU's `x * (1/s)`, while 6,679,936 of them differed from the CPU's `x / s`. Dividing by a float64 tensor on the GPU matched the CPU exactly.
-   - At toy scale (27,824 parameters), the sliced merge on the GPU differed from the CPU baseline in 1 element (one bit of float32). With the division done by a device tensor, it was bitwise equal.
-   - Full-scale results: **waits on P6** (`results/prototypes/p6_merge_determinism.md`).
+   - **At full scale** (the 46,050,432-parameter Stage 0 model):
+     - with the current code, the sliced merge on the GPU differed from the CPU in 472 elements after plain averaging and 526 after a second Nesterov round (largest difference 5.96e-08); the full-copy merge happened to be equal;
+     - with the division done by a device tensor, both kinds were **bitwise equal** to the CPU, also with the results shuffled (`results/prototypes/p6_merge_determinism.md`).
 5. **Outer step:**
    - plain averaging or Nesterov, as the configuration says;
    - **Rule:** the outer state (Nesterov velocity) is stored and published as **float64**.
-   - **P6 (toy scale):** storing it as float32 changed round 2's merged model in 114 of 27,824 elements (sliced) and 96 (full).
+   - **P6 (full scale):** storing it as float32 between rounds changed round 2's merged model in 204,432 elements (sliced) and 132,276 (full).
 6. **Representation:**
    - whether members upload full states W_i or deltas Δ_i = G_{t−1} − W_i is AD-7;
-   - **P6 (toy scale, CPU):** rebuilding W_i = G_{t−1} − Δ_i before the merge gave the same bits as full states; merging the deltas directly (G − mean Δ) did not (219 and 325 elements differed).
-   - Either works if every peer does the same thing. The rule must name one. **Waits on P6** at full scale.
+   - **P6 (full scale, CPU):** rebuilding W_i = G_{t−1} − Δ_i before the merge gave the same bits as full states; merging the deltas directly (G − mean Δ) did not (355,790 and 499,977 elements differed);
+   - either works if every peer does the same thing. **Rule (proposal):** if deltas are shipped, peers rebuild full states and run the same merge.
 7. **Device:**
-   - **Rule (proposal):** the merge is computed on the CPU, whatever GPU a peer has. It is a few seconds of arithmetic per round (P6 timings), and pinning the device removes a class of differences that this prototype can only sample.
-   - P6 also measures CPU against GPU, in case GPU merges are wanted later.
+   - **Rule (proposal):** the merge is computed on the CPU, whatever GPU a peer has. **P6:** `merge()` alone took 0.3 to 1.1 s on this laptop's CPU at full scale. Pinning the device removes the class of differences found on the GPU, which this prototype can only sample.
+   - On the CPU, P6 found the merge bitwise stable across repeats, 1 thread against 14, results in member, reversed or shuffled order, and in memory against through files.
 
 ### 7.2 Agreement
 
@@ -279,7 +291,9 @@ It does not judge update quality: no loss scoring, no outlier rejection. For tru
 ## 9. Storage, checkpoints and host limits
 
 **Known limits** (study Q5, read 2026-10-13):
-- Hub repositories: commit limits exist but are not documented; "a few thousand commits" degrade a repository, which "is not meant to work as a database"; `CommitScheduler` advises at least 5 minutes between commits.
+- Hub repositories: "a few thousand commits" degrade a repository, which "is not meant to work as a database"; `CommitScheduler` advises at least 5 minutes between commits.
+- **Commit creation: 128 requests per hour on the free plan, rejected conditional commits very likely included.** This comes from the HTTP 429 text seen by P4 on 2026-10-14; the study had found the commit limits undocumented.
+- **API requests: 1,000 per 300 s**, fixed window, per account (response headers, 2026-10-14).
 - Free downloads: 5,000 per 5 minutes per user.
 - "Excessive bulk activity" counts as abuse.
 - Storage Buckets: mutable, non-versioned, intended for checkpoints and logs; free allowance not quantified.
@@ -289,10 +303,10 @@ It does not judge update quality: no loss scoring, no outlier rejection. For tru
 
 | Quantity | Value | Prototype |
 |---|---|---|
-| Upload time, 0.2 GB and 0.6 GB, Hub repository | pending | P3 |
-| Upload time, same, Storage Bucket (if a free organisation may create one) | pending | P0, P3 |
-| Download time, same | pending | P3 |
-| Delay until another client sees a new file | pending | P3 |
+| Smoke test, Storage Bucket, one 0.1 GB file | upload 95.1 s (8.4 Mbit/s); download 60.4 s (13.2 Mbit/s) | P3 smoke |
+| Smoke test, Storage Bucket, one 10 MB file | upload 9.06 s; visible to another process after 0.55 s; download 7.43 s | P3 smoke |
+| Upload and download times, 0.2 GB and 0.6 GB, Hub repository and bucket, 3 repeats | pending (size of the run waits for the owner) | P3 |
+| A free organisation may create Storage Buckets | yes | P0 |
 | Xet savings on a successive, slightly changed update | pending | P3 |
 | Commit latency and refusals at 336 log commits and 5 × 48 update commits per day, over a week | pending | P5 |
 | Time to squash the log's history | pending | P5 |
@@ -303,6 +317,12 @@ It does not judge update quality: no loss scoring, no outlier rejection. For tru
 - **Mirror.** Every checkpoint is copied to a second host (AD-3), so a single host's outage stops rounds but loses nothing (study 4.1).
 
 **Traffic per peer and round (inference, study 4.1).** In full-copy mode, a peer that merges everything downloads N − 1 updates: at N = 5 and 0.6 GB, 2.4 GB per round. The alternative is to download only the published checkpoint and spot-check it. That trades bandwidth for trust in the publisher and is AD-11.
+
+**What this home's link implies (inference from the P3 smoke test, one home, one morning):**
+- At 8.4 Mbit/s up, one 0.6 GB update takes about 9.5 minutes to upload.
+- At 13.2 Mbit/s down, the 2.4 GB that a full-copy peer needs to merge everything takes about 25 minutes.
+- Together, with training, that does not fit a 30-minute round. Full-copy rounds of that size need longer rounds, publisher-only merging (AD-11), smaller updates (slices; compression, which the study's Q10 covers), or all three.
+- The pilot model's size, which decides update size, is still open (product specification, step 1.2).
 
 ## 10. Discovery and connections
 
@@ -407,11 +427,11 @@ The roadmap places the Gate N1b definition in step 1.3. This is a draft for the 
 
 | Prototype | Sections it can change | State on 2026-10-14 |
 |---|---|---|
-| P0 token scope probe | 4, 5 | token created (organisation permission `repo.contribute.write` only); probe not yet run |
-| P3 transfers from this home | 5, 9, AD-11 | not yet run |
-| P4 concurrent log writers | 6.1, 6.3, 6.4 | not yet run |
+| P0 token scope probe | 4, 5 | done: organisation repositories and buckets yes, personal namespace no; stale parent refused with 412 |
+| P3 transfers from this home | 5, 9, AD-11 | smoke test done (8.4 Mbit/s up, 13.2 down); full run's size waits for the owner |
+| P4 concurrent log writers | 6.1, 6.2, 6.3, 6.4 | first attempt stopped by the 128-per-hour commit limit; rerun pending |
 | P5 a week at the planned rate | 6.2, 9 | not yet run |
-| P6 merge determinism | 7, AD-7, AD-8 | toy scale done; full scale running |
+| P6 merge determinism | 7, AD-7, AD-8 | done on one machine at full scale |
 | P8 Windows installs | 10, 12 | awaiting the owner's approval of the package list |
 | P9 signing | 4, 12 | done on one machine: all 7 cases as expected |
 | P1, P2 home survey | 10 (Option C) | not scheduled (D41) |
