@@ -136,6 +136,36 @@ def test_p9_signing_cases(tmp_path):
     assert [c["accepted"] for c in report["cases"]].count(True) == 1  # only the genuine set
 
 
+def test_p5_schedule_and_resume():
+    from scripts.proto.p5_commit_rate import ROUND_SECONDS, AttemptLog, plan_next, round_steps
+
+    steps = round_steps(2)
+    assert steps == ["update/m0", "update/m1", "entry/m0", "entry/m1", "close", "checkpoint"]
+    a = plan_next(set(), set(), t0=1000.0, now=1000.0, rounds=10, steps=steps)
+    assert (a.kind, a.round_index, a.step, a.gaps) == ("step", 0, "update/m0", ())
+    assert plan_next(set(), set(), t0=1000.0, now=900.0, rounds=10, steps=steps).kind == "wait"
+    round0 = {(0, s) for s in steps}
+    w = plan_next(round0, set(), t0=0.0, now=100.0, rounds=10, steps=steps)
+    assert w.kind == "wait" and w.wait_seconds == ROUND_SECONDS - 100
+    # The laptop was off for rounds 1 and 2: they become gaps and are never attempted late.
+    r = plan_next(round0, set(), t0=0.0, now=3 * ROUND_SECONDS + 5, rounds=10, steps=steps)
+    assert (r.kind, r.round_index, r.step, r.gaps) == ("step", 3, "update/m0", (1, 2))
+    assert plan_next(round0, {1, 2}, t0=0.0, now=3 * ROUND_SECONDS + 5, rounds=10, steps=steps).gaps == ()
+    d = plan_next(round0, {1, 2}, t0=0.0, now=10 * ROUND_SECONDS, rounds=10, steps=steps)
+    assert d.kind == "done" and d.gaps == tuple(range(3, 10))
+
+
+def test_p5_attempt_log_round_trip(tmp_path):
+    from scripts.proto.p5_commit_rate import AttemptLog
+
+    log = AttemptLog(tmp_path / "a.jsonl")
+    log.append({"event": "start", "t0": 5.0})
+    log.append({"event": "attempt", "round": 0, "step": "close", "status": 200})
+    log.append({"event": "gap", "round": 3})
+    again = AttemptLog(tmp_path / "a.jsonl")
+    assert again.t0() == 5.0 and again.done() == {(0, "close")} and again.gaps() == {3}
+
+
 def test_shuffled_order_is_new():
     items = list(range(4))
     s = p6.ordered(items, "shuffled")

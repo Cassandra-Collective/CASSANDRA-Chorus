@@ -360,7 +360,13 @@ At these rates the full plan, about 5.6 GB each way, would occupy the home conne
 ### Not started
 
 - P5: a week of the laptop online; waits for the owner.
-- P8: installs third-party packages; waits for the owner's approval of the list.
+- P8: installs third-party packages; waits for the owner's approval of the list. What PyPI lists (queried 2026-10-14, about 06:10 UTC, metadata only, nothing installed):
+  - `iroh` 1.1.0 (2026-07-16): one Windows wheel, `py3-none-win_amd64`;
+  - `libp2p` 0.8.0 (2026-09-26): **no wheel, source package only**, so a Windows install builds from source;
+  - `huggingface_hub` 2.2.0 (2026-10-08): pure Python, **one major version ahead of the 1.24.0 the prototypes use**;
+  - `hf_xet` 1.7.0, `safetensors` 0.8.0, `cryptography` 50.0.2: Windows wheels.
+- `scripts/proto/hub_cleanup.py` is written and was dry-run on 2026-10-14. It lists 4 organisation resources and skips the personal-namespace probe, which was never created. Nothing is deleted until the owner has seen the results.
+- `scripts/proto/p5_commit_rate.py` is written; its schedule and resume logic is unit-tested (`test_p5_*`). It is not started.
 
 **Not tested (known in advance):**
 - equality across machines and PyTorch builds;
