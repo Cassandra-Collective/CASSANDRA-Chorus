@@ -90,3 +90,19 @@ This project is led by its owner, Mert Efe Şensoy, who plans the work, assigns 
 - Explain why, not only what.
 - State each function's contract: its inputs, outputs, side effects and invariants.
 - **No em or en dashes** in documents or code comments; use commas, colons, parentheses or separate sentences.
+
+## 9. Code of conduct
+
+Everyone who takes part in this project, in issues, pull requests, reviews, comments or any other project space, follows the Cassandra Collective [code of conduct](https://github.com/Cassandra-Collective/.github/blob/main/CODE_OF_CONDUCT.md). It is an organisation default: it lives in the organisation's `.github` repository, and GitHub applies it to every repository that has no code of conduct of its own. This repository links to it instead of keeping a copy.
+
+## 10. Reporting security problems
+
+Section 6 is about handling tokens and fetched files safely. This section is about what to do when you find a security problem, for example a token or key exposed in the repository, or a way to make the code load or run something it should not.
+
+- **Never report a security problem in a public issue, pull request, comment or discussion.** A public report tells everyone before there is a fix.
+- **Report it privately** through GitHub's private vulnerability reporting: [open a private report](https://github.com/Cassandra-Collective/CASSANDRA-Chorus/security/advisories/new), or use "Report a vulnerability" on the repository's Security tab. The report, and the work on a fix, stay private until an advisory is published.
+- The organisation's [security policy](https://github.com/Cassandra-Collective/.github/blob/main/SECURITY.md) applies to this repository.
+
+## 11. Getting help
+
+For questions that are not yet an issue, see the organisation's [support page](https://github.com/Cassandra-Collective/.github/blob/main/SUPPORT.md). Questions about an existing issue go in its comments.
