@@ -438,7 +438,7 @@ The roadmap places the Gate N1b definition in step 1.3. This is a draft for the 
 | P4 concurrent log writers | 6.1, 6.2, 6.3, 6.4 | done on one account: exactly one winner in 10 of 10 races; atomic 50-file commits; no lost appends; 409 and 412 both mean "retry". First attempt found the 128-per-hour commit limit |
 | P5 a week at the planned rate | 6.2, 9 | not yet run |
 | P6 merge determinism | 7, AD-7, AD-8 | done on one machine at full scale |
-| P8 Windows installs | 10, 12 | awaiting the owner's approval of the package list |
+| P8 Windows installs | 10, 12 | done: `huggingface_hub` 2.2.0 with Xet, safetensors, cryptography and iroh 1.1.0 from Windows wheels; libp2p 0.8.0 built from source; all import (connections not tested) |
 | P9 signing | 4, 12 | done on one machine: all 7 cases as expected |
 | P1, P2 home survey | 10 (Option C) | not scheduled (D41) |
 | P7 deadline-quorum simulation | 14 | after Phase 1 (GPU time) |
