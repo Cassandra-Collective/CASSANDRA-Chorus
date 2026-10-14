@@ -1,0 +1,38 @@
+name: Research question or experiment
+description: A survey, measurement, prototype or training run with a written plan and a result file.
+labels: ["type: experiment"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use `type: research` instead for reading or surveying without runs. Gates and readings are written before the runs they judge (roadmap principle 3).
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What this answers, and which decision or design element it informs.
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: Plan
+      description: Method, arms, seeds, hardware and scale. Link the implementation document when written.
+    validations:
+      required: true
+  - type: textarea
+    id: reading
+    attributes:
+      label: Pre-registered reading
+      description: What result means what, written before any run.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Done when
+      value: |
+        - [ ] Plan document committed before the runs
+        - [ ] Results in results/ and an entry in RESULTS.md (hardware, scale, seeds, what was not tested)
+  - type: input
+    id: blocked-by
+    attributes:
+      label: Blocked by

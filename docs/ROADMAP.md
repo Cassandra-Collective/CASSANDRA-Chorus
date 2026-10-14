@@ -2,9 +2,9 @@
 
 | | |
 |---|---|
-| Status | Draft for the owner's review |
+| Status | **Approved by the owner on 2026-10-14 (D42)**, with the three changes from the prototype findings listed under Phase 3. All work is tracked as GitHub issues under one milestone per phase (D45, `CONTRIBUTING.md`) |
 | Date | 2026-10-13 |
-| Decisions | SRS section 9, D29 to D41 (owner, 2026-10-13 and 2026-10-14) |
+| Decisions | SRS section 9, D29 to D45 (owner, 2026-10-13 and 2026-10-14) |
 | Replaces | Nothing yet. `docs/PLAN.md` remains the record of Stage 0. The SRS and PLAN are rewritten around this roadmap in step 1.4 |
 
 ## 1. Where we are
@@ -70,9 +70,9 @@ Time estimates are rough and assume one developer working with Claude; they will
 | Step | Deliverable | Notes |
 |---|---|---|
 | 1.1 | **System study: how volunteer training is coordinated with no server anyone runs, and what stays central in each design.** It evaluates two design families against D37 and D38: peer-to-peer discovery with group averaging, and public-host shared state with a merge any peer can compute and check | A brief first (`docs/research/2026-10-13-system-study-brief.md`), reviewed before launch; then an audited report like the literature investigation. Ends in a design recommendation for the owner (D35), including who may write shared state. **Done 2026-10-14:** `docs/research/2026-10-13-system-study-report.md`, audited; owner decisions D39 to D41 |
-| 1.2 | **Product spec:** the assistant's tasks, the sandbox and checker, the data policy, the tokenizer plan, model-size targets for local inference, safety rules (confirmation before actions; prompt injection inside emails) | |
-| 1.3 | **System architecture document** | Peer roles, the shared-state or peer protocol, discovery and bootstrap, connection relaying through our own machines, storage on public hosts, the merge rule, the holder-count rule, failure and churn handling, synchronous and asynchronous modes, versioning, the trust model for trusted participants. **Draft 0.1, 2026-10-14:** `docs/ARCHITECTURE.md`, with the study's Option A as the candidate; not adopted until the prototypes report (D41) |
-| 1.4 | **SRS and PLAN rewritten** around this roadmap | The Stage 1 to 3 outlines become requirements with acceptance criteria |
+| 1.2 | **Product spec:** the assistant's tasks, the sandbox and checker, the data policy, the tokenizer plan, model-size targets for local inference, safety rules (confirmation before actions; prompt injection inside emails) | Draft 0.1 (`docs/assistant-spec.md`) in PR #20, **under review** (issue #21); its owner decisions OD-1 to OD-10 are issues #22 to #31 |
+| 1.3 | **System architecture document** | Peer roles, the shared-state or peer protocol, discovery and bootstrap, connection relaying through our own machines, storage on public hosts, the merge rule, the holder-count rule, failure and churn handling, synchronous and asynchronous modes, versioning, the trust model for trusted participants. **Approved 2026-10-14 as the working architecture (D44):** `docs/ARCHITECTURE.md`, the study's Option A. Its owner decisions AD-1 to AD-13 are issues #32 to #44; P3's reduced run is #45 and its write-up #46 |
+| 1.4 | **SRS and PLAN rewritten** around this roadmap | The Stage 1 to 3 outlines become requirements with acceptance criteria. Issues #48 (SRS) and #49 (PLAN) |
 
 ### Phase 2 · Data foundation (about 2 to 3 weeks, mostly CPU)
 
@@ -92,6 +92,17 @@ Time estimates are rough and assume one developer working with Claude; they will
 | 3.4 | Storage and transport for model versions and updates: public file hosts and direct peer transfer, without third-party relays |
 | 3.5 | **Gate N1a (plumbing correctness), synchronous mode.** Full-model averaging on Task B across two real machines lands within seed noise of the simulated result for the same configuration, and a sliced run (with at least 2 holders per expert) does the same. Stage 0 is the reference |
 | 3.6 | **Gate N1b (asynchronous algorithm).** A gate for the asynchronous algorithm the study recommends, written down before its first run: its quality against the synchronous mode and against centralized training at equal compute, at the pilot's scale |
+
+**Changes approved on 2026-10-14 (D42), from the prototype findings:**
+
+1. **A second machine before Gate N1a** (#74). Gate N1a needs it, and one laptop cannot answer three things:
+   - whether merges match bit for bit across machines (#75);
+   - whether a second account can write the shared log (#76);
+   - another home's link speed.
+2. **Update size is a design constraint** (#67). One home measured 8.4 Mbit/s up and 13.2 Mbit/s down, so full-copy rounds where every peer merges everything do not fit 30-minute rounds at the pilot's model sizes. Phase 3 plans for smaller updates, a designated merger, or longer rounds (owner decisions AD-7 #38, AD-11 #42, AD-13 #44).
+3. **The client budgets commit attempts** (#64). The Hugging Face free plan allows 128 commit-creation requests per hour per account, and rejected conditional commits very likely count.
+
+A bug found by prototype P6 is fixed early in this phase: the merge differs between GPU and CPU (#60).
 
 ### Phase 4 · Friends pilot over the internet (3 to 5 trusted people, D36)
 
@@ -133,16 +144,18 @@ The averaging cost, remedies for sliced MoE, model size, and anything the gaps s
 
 ## 6. Decisions still to make, and when
 
-| Decision | When |
-|---|---|
-| Build on an existing framework or our own | End of 1.1 (D35) |
-| Model sizes for the pilot and the assistant | 1.2 |
-| Tokenizer vocabulary size | 2.2 |
-| The allowance for Gate N2 | Before 4.3 starts |
-| Who may write to shared state | End of 1.1 (D37) |
-| The asynchronous algorithm and its Gate N1b | End of 1.1, gate written in 1.3 |
-| Limits of the public hosts used (size, rate, terms) | 1.3 |
-| Which sources count as "human-written" | 2.1 |
+Since 2026-10-14 every open owner decision is a GitHub issue labelled `type: decision`, under the milestone of the step that needs it (D45). This table maps the roadmap's original list onto them.
+
+| Decision | When | State |
+|---|---|---|
+| Build on an existing framework or our own | End of 1.1 (D35) | Settled: our own thin layer on libraries (D44) |
+| Model sizes for the pilot and the assistant | 1.2 | Open: target devices, OD-6 (#27) |
+| Tokenizer vocabulary size | 2.2 | Open: OD-7 (#28) |
+| The allowance for Gate N2 | Before 4.3 starts | Open: #89 |
+| Who may write to shared state | End of 1.1 (D37) | Settled for the pilot (D40); log organisation open, AD-2 (#33) |
+| The asynchronous algorithm and its Gate N1b | End of 1.1, gate written in 1.3 | Algorithm settled: deadline-quorum (D39); gate definition open, AD-12 (#43), pre-registration #80 |
+| Limits of the public hosts used (size, rate, terms) | 1.3 | Partly measured (architecture section 9); P3 #45, Hugging Face enquiry #82, P5 deferred #83 |
+| Which sources count as "human-written" | 2.1 | Open: OD-4 (#25) |
 
 ## 7. Risks
 
@@ -160,6 +173,17 @@ The averaging cost, remedies for sliced MoE, model size, and anything the gaps s
 
 ## 8. Next actions
 
-1. Owner reviews this roadmap.
-2. Merge PR #17.
-3. Write the brief for step 1.1 (the system study, rescoped by D37 and D38), have it reviewed, then launch it; start step 1.2 (the product spec).
+Next actions are tracked as issues, not here.
+- [Milestones](https://github.com/mertefesensoy/CASSANDRA-Chorus/milestones): one per phase, plus "Research track" and "Housekeeping and process".
+- The seed backlog of 2026-10-14: `docs/planning/2026-10-14-backlog-issues.md`.
+
+The first ones, in Phase 1:
+- review the product specification (#21) and decide target devices (#27);
+- the early architecture decisions: AD-7 (#38), AD-11 (#42) and AD-13 (#44);
+- P3's reduced run (#45);
+- the SRS and PLAN rewrite (#48, #49).
+
+For the team:
+- continuous integration (#50);
+- branch protection (#52);
+- a project board (#51).

@@ -5,7 +5,7 @@
 | PLAN step | Roadmap step 1.3 (`docs/ROADMAP.md`) |
 | Branch | `docs/architecture` |
 | SRS requirements | D34, D37 to D41; principles 2, 6, 7 |
-| Status | Draft for the owner's review; not adopted (D41) |
+| Status | Approved by the owner on 2026-10-14 as the working architecture (D44); merged as PR #19. Owner decisions AD-1 to AD-13 are issues #32 to #44 |
 
 ## Problem / Motivation
 

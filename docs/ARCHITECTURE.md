@@ -3,8 +3,8 @@
 | | |
 |---|---|
 | Roadmap step | 1.3, system architecture document (`docs/ROADMAP.md`) |
-| Status | **Draft 0.1, 2026-10-14. Not adopted.** D41 defers the design until the prototypes the owner's machine can run alone have reported |
-| Decisions it builds on | D29 to D41 (`docs/SRS.md` section 9) |
+| Status | **Draft 0.1, approved by the owner on 2026-10-14 as the working architecture (D44, PR #19).** It is the basis for Phase 3 planning. The owner decisions in section 15 are open GitHub issues, and the sections marked "Waits on" can still change with the P3 and P5 results |
+| Decisions it builds on | D29 to D45 (`docs/SRS.md` section 9) |
 | Evidence | `docs/research/2026-10-13-system-study-report.md` (the study); `docs/implementations/2026-10-14-solo-prototypes.md` and `results/prototypes/` (the prototypes) |
 | Replaces | Nothing. Step 1.4 turns the adopted parts into SRS requirements |
 
@@ -15,7 +15,7 @@ The design described here is the study's **Option A, the bulletin board**:
 - every peer computes the merge;
 - a signed log, appended with conditional commits, records which updates count in each round.
 
-It is the candidate, not the decision (D41). Four labels mark what kind of statement each one is:
+It was the candidate while the prototypes ran (D41); the owner approved it as the working architecture on 2026-10-14 (D44). Approval does not freeze it: changes go through pull requests, and the labels below still mark what is open. Four labels mark what kind of statement each one is:
 
 | Label | Meaning |
 |---|---|
@@ -414,20 +414,21 @@ The roadmap places the Gate N1b definition in step 1.3. This is a draft for the 
 
 ## 15. Owner decisions this draft needs
 
-| ID | Decision | Needed by |
-|---|---|---|
-| AD-1 | Where the signing key lives and how it is backed up; whether maintainers later co-sign | first signed release |
-| AD-2 | Whether the round log lives in an organisation of its own (limits the reach of the `write` role) | before Phase 3 networking |
-| AD-3 | The checkpoint mirror's host (GitHub releases, a second Hub organisation, or another) | Phase 3 |
-| AD-4 | Checkpoint retention: every k-th round kept in full | Phase 3 |
-| AD-5 | Q_min, the minimum number of updates for a round to merge | Gate N1b pre-registration |
-| AD-6 | The synchronous mode's abort timeout | Gate N1a |
-| AD-7 | Full states or deltas as the update format (P6 informs) | after P6 |
-| AD-8 | Bitwise hashes or a tolerance check for agreement (P6 here; cross-machine runs later) | after P6 and a second machine |
-| AD-9 | Which work-unit kind each round uses; what happens when P_t is too small for 2 holders per expert | Phase 3 |
-| AD-10 | Whether members' homes go in the configuration (for holder placement) | Phase 4 |
-| AD-11 | Whether every peer downloads all updates and merges, or downloads the checkpoint and spot-checks | after P3 |
-| AD-12 | Gate N1b: the outer optimizer, the primary reading, the compute accounting, the allowance | before Gate N1b's first run |
+| ID | Decision | Needed by | Issue |
+|---|---|---|---|
+| AD-1 | Where the signing key lives and how it is backed up; whether maintainers later co-sign | first signed release | #32 |
+| AD-2 | Whether the round log lives in an organisation of its own (limits the reach of the `write` role) | before Phase 3 networking | #33 |
+| AD-3 | The checkpoint mirror's host (GitHub releases, a second Hub organisation, or another) | Phase 3 | #34 |
+| AD-4 | Checkpoint retention: every k-th round kept in full | Phase 3 | #35 |
+| AD-5 | Q_min, the minimum number of updates for a round to merge | Gate N1b pre-registration | #36 |
+| AD-6 | The synchronous mode's abort timeout | Gate N1a | #37 |
+| AD-7 | Full states or deltas as the update format (P6 informs) | after P6 | #38 |
+| AD-8 | Bitwise hashes or a tolerance check for agreement (P6 here; cross-machine runs later) | after P6 and a second machine | #39 |
+| AD-9 | Which work-unit kind each round uses; what happens when P_t is too small for 2 holders per expert | Phase 3 | #40 |
+| AD-10 | Whether members' homes go in the configuration (for holder placement) | Phase 4 | #41 |
+| AD-11 | Whether every peer downloads all updates and merges, or downloads the checkpoint and spot-checks | after P3 | #42 |
+| AD-12 | Gate N1b: the outer optimizer, the primary reading, the compute accounting, the allowance | before Gate N1b's first run | #43 |
+| AD-13 | Round length L and the update-size budget per round, given the measured home links (added 2026-10-14 from the P3 smoke test) | the protocol specification (roadmap 3.1) | #44 |
 
 ## 16. What waits on which prototype
 
