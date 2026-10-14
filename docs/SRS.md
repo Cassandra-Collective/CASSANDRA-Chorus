@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft 0.5, not yet approved |
 | Date | 2026-10-07 |
-| Repository | https://github.com/mertefesensoy/CASSANDRA-Chorus |
+| Repository | https://github.com/Cassandra-Collective/CASSANDRA-Chorus |
 | Owner | Mert Efe Şensoy |
 | Scope of this version | Stage 0 in full; Stages 1 to 3 in outline |
 | Changes since Draft 0.3 | Owner decisions of 2026-10-07 applied: see section 9 for the list, and sections 4.2 to 4.4 for the requirements they affect |
@@ -170,7 +170,7 @@ Decided by the owner on 2026-10-07:
 
 | # | Decision | Outcome |
 |---|---|---|
-| D1 | Repository and package name | `CASSANDRA-Chorus`, at https://github.com/mertefesensoy/CASSANDRA-Chorus. The Python package is `cassandra_chorus` |
+| D1 | Repository and package name | `CASSANDRA-Chorus`, at https://github.com/Cassandra-Collective/CASSANDRA-Chorus. The Python package is `cassandra_chorus`. (Under the personal account `mertefesensoy` until 2026-10-14; see D46) |
 | D2 | Licence | Apache-2.0, the same as the parent CASSANDRA repository |
 | D3 | Language and framework for Stage 0 | Python with PyTorch, using the environment already installed on the reference laptop (Python 3.13.14, PyTorch 2.12.1 built for CUDA 12.6). Minimum versions are declared in the package metadata, and exact versions are written to every run log (S0-F-24) |
 | D4 | Acceptance thresholds | Confirmed as proposed, with the definitions added in section 4.4 |
@@ -225,6 +225,7 @@ Decided by the owner on 2026-10-08, after a walk-through of the prior-work surve
 | D43 | Prototype results accepted (owner, 2026-10-14) | PR #18 merged: P0, P4, P6, P8 and P9 done, P3 smoke test done (`docs/implementations/2026-10-14-solo-prototypes.md`, `results/prototypes/`). P3 runs at reduced size (0.2 GB three times and 0.6 GB once, on a Hub repository and a bucket, plus the deduplication cases) on an evening; P5 (a week at the planned commit rate) is deferred; P8 used the latest package versions |
 | D44 | Working architecture (owner, 2026-10-14; supersedes D41's deferral) | PR #19 merged: `docs/ARCHITECTURE.md` draft 0.1 is approved as the **working architecture** and the basis for Phase 3 planning. That means the study's Option A, a bulletin board on public file hosts with a signed round log appended by conditional commits, every peer computing the merge, and our own thin coordination layer on libraries rather than an existing framework (study 4.6, D35). The owner decisions AD-1 to AD-13 stay open as tracked issues; sections marked "Waits on" may still change with the P3 and P5 results; changes go through pull requests. The product specification (step 1.2, PR #20) is under review and is not part of this approval |
 | D45 | Team workflow (owner, 2026-10-14) | The owner leads a team. All work (tasks, features, bugs, research, experiments and owner decisions) is tracked as GitHub issues in this repository, under milestones that follow the roadmap's phases and labelled by type, area, priority and status; the owner assigns them. Every pull request closes an issue; owner decisions are taken in `type: decision` issues and recorded here as D-numbers. Conventions: `CONTRIBUTING.md`. Seed backlog: `docs/planning/2026-10-14-backlog.toml`, created by `scripts/ops/seed_backlog.py` |
+| D46 | Organisation (owner, 2026-10-14) | The repository moved from the personal account `mertefesensoy` to the GitHub organisation [Cassandra-Collective](https://github.com/Cassandra-Collective), together with CASSANDRA, Ephesus and Dervish. It was first transferred as `CASANDRA-Lab` and renamed the same day; `CASSANDRA-Lab` was unavailable because a user account of that name exists. The organisation's identity, the Forecast mark, and its brand guide live in https://github.com/Cassandra-Collective/.github. Links in this repository point at the organisation; GitHub redirects the old URLs only until a repository is created at the old path |
 
 Name availability, checked on 2026-10-07 by read-only lookups: PyPI has no project named `cassandra-chorus`, and Hugging Face has no user or organisation named `cassandra-chorus` and no model repository `mertefesensoy/cassandra-chorus` (or that repository is private). Neither check reserves the name.
 

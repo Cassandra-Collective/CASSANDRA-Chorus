@@ -1,6 +1,6 @@
 # CASSANDRA Chorus · Stage 0: sliced local training of a mixture-of-experts model, a negative result
 
-Technical report, 2026-10-11. Repository: github.com/mertefesensoy/CASSANDRA-Chorus (Apache-2.0). Every number below is taken from the committed record; sources are given in brackets.
+Technical report, 2026-10-11. Repository: github.com/Cassandra-Collective/CASSANDRA-Chorus (Apache-2.0). Every number below is taken from the committed record; sources are given in brackets.
 
 ## Summary
 

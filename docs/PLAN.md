@@ -4,7 +4,7 @@
 |---|---|
 | Status | Draft 0.5. The owner's decisions of 2026-10-07 and 2026-10-08 are applied (section 10; SRS section 9). Everything else is a proposal until the owner confirms it. |
 | Date | 2026-10-07 |
-| Repository | https://github.com/mertefesensoy/CASSANDRA-Chorus |
+| Repository | https://github.com/Cassandra-Collective/CASSANDRA-Chorus |
 | Owner | Mert Efe Şensoy |
 | Companion document | `SRS.md` (requirement IDs below refer to it) |
 
@@ -164,6 +164,6 @@ Decided on 2026-10-07 (the full list, with details, is in SRS section 9):
 7. Conventions inherited from CASSANDRA: seeds 7, 11 and 19; no em or en dashes in documents; raw run logs local and `RESULTS.md` committed.
 8. Version control: `main` plus one branch and pull request per step.
 
-Also decided earlier: the repository, `CASSANDRA-Chorus`, at https://github.com/mertefesensoy/CASSANDRA-Chorus. On 2026-10-07 no PyPI project and no Hugging Face namespace named `cassandra-chorus` existed. That does not reserve the name.
+Also decided earlier: the repository, `CASSANDRA-Chorus`, at https://github.com/Cassandra-Collective/CASSANDRA-Chorus. On 2026-10-07 no PyPI project and no Hugging Face namespace named `cassandra-chorus` existed. That does not reserve the name.
 
 Decided later on 2026-10-07: "across all maps" in SRS S0-A-01 means every map individually (SRS D10). Step 4 starts with a pilot that includes a routing-necessity diagnostic: accuracy of the centralized model with its trained router, with random routing, and with each expert removed. Its purpose is to establish whether Task A can detect a routing failure at all: Task A holds about a thousand bits, which any single expert can store. The compute budget for the Task A comparisons is proposed to the owner after the pilot.

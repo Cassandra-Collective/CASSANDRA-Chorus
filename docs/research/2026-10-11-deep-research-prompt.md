@@ -1,6 +1,6 @@
 # Deep research prompt: why sliced local training of a mixture-of-experts model fell short in CASSANDRA Chorus Stage 0
 
-Paste everything below the line into a new session. It is self-contained. If the session can read the CASSANDRA Chorus repository (github.com/mertefesensoy/CASSANDRA-Chorus), read `docs/stage0-report.md`, `docs/stage0-closeout.md` and `docs/prior-work.md` first.
+Paste everything below the line into a new session. It is self-contained. If the session can read the CASSANDRA Chorus repository (github.com/Cassandra-Collective/CASSANDRA-Chorus), read `docs/stage0-report.md`, `docs/stage0-closeout.md` and `docs/prior-work.md` first.
 
 ---
 

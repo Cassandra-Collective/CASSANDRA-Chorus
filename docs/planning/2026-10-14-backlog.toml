@@ -2,7 +2,7 @@
 # Created on GitHub by scripts/ops/seed_backlog.py. After seeding, the GitHub issues are the source of truth.
 # In bodies: {blob} = https://github.com/<repo>/blob/main/ ; {#key} = number of an EARLIER issue in this file.
 
-repo = "mertefesensoy/CASSANDRA-Chorus"
+repo = "Cassandra-Collective/CASSANDRA-Chorus"
 owner_login = "mertefesensoy"
 
 # ---------------------------------------------------------------- labels
@@ -652,7 +652,7 @@ labels = ["type: task", "area: process", "priority: high", "status: needs owner"
 milestone = "Housekeeping and process"
 assignees = ["owner"]
 body = '''
-**Context:** with a team, changes should reach `main` only through reviewed pull requests ([CONTRIBUTING](https://github.com/mertefesensoy/CASSANDRA-Chorus/blob/main/CONTRIBUTING.md) once the workflow PR is merged).
+**Context:** with a team, changes should reach `main` only through reviewed pull requests ([CONTRIBUTING](https://github.com/Cassandra-Collective/CASSANDRA-Chorus/blob/main/CONTRIBUTING.md) once the workflow PR is merged).
 
 **Task:** in the repository settings, require a pull request with at least one approving review and the CI status check before merging to `main`; disallow force pushes.
 

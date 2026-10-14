@@ -1,6 +1,8 @@
+<p><a href="https://github.com/Cassandra-Collective"><picture><source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Cassandra-Collective/.github/main/brand/svg/cassandra-mark-small-on-dark.svg"><img src="https://raw.githubusercontent.com/Cassandra-Collective/.github/main/brand/svg/cassandra-mark-small-on-light.svg" alt="Cassandra Collective mark" width="20" height="20" align="absmiddle"></picture></a>&nbsp; Part of the <a href="https://github.com/Cassandra-Collective">Cassandra Collective</a></p>
+
 # CASSANDRA Chorus
 
-CASSANDRA Chorus is the next phase of the [CASSANDRA](https://github.com/mertefesensoy/CASSANDRA) low-hardware language-model research program. The long-term goal is a language model trained by a pool of volunteer machines, where no machine holds the whole model during training, and where the full pipeline, logs and weights are open. No token or cryptocurrency is involved; contribution is tracked in a plain credit ledger.
+CASSANDRA Chorus is the next phase of the [CASSANDRA](https://github.com/Cassandra-Collective/CASSANDRA) low-hardware language-model research program. The long-term goal is a language model trained by a pool of volunteer machines, where no machine holds the whole model during training, and where the full pipeline, logs and weights are open. No token or cryptocurrency is involved; contribution is tracked in a plain credit ledger.
 
 The model is a mixture-of-experts transformer. Each worker trains the shared part of the model plus a subset of the experts locally, and a coordinator merges the results ("sliced local training"). Whether this works for a language model is the open question that Stage 0 tests, on a single machine, before any pool infrastructure is built.
 

@@ -174,7 +174,7 @@ Since 2026-10-14 every open owner decision is a GitHub issue labelled `type: dec
 ## 8. Next actions
 
 Next actions are tracked as issues, not here.
-- [Milestones](https://github.com/mertefesensoy/CASSANDRA-Chorus/milestones): one per phase, plus "Research track" and "Housekeeping and process".
+- [Milestones](https://github.com/Cassandra-Collective/CASSANDRA-Chorus/milestones): one per phase, plus "Research track" and "Housekeeping and process".
 - The seed backlog of 2026-10-14: `docs/planning/2026-10-14-backlog-issues.md`.
 
 The first ones, in Phase 1:
