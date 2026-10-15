@@ -5,7 +5,7 @@
 | PLAN step | none (housekeeping) |
 | Branch | `docs/discussions-qa` |
 | SRS requirements | D45 (every pull request closes an issue: #120) |
-| Status | Planned |
+| Status | Verified on 2026-10-15 (YAML parse, Q&A link, full test suite, dash check); the rendered new-issue page is checked after merge |
 
 Project prose style: no em or en dashes.
 
@@ -46,14 +46,21 @@ None: links and wording only.
 
 ## Verification
 
-Planned:
+Run on 2026-10-15 on Windows 11, from the repository root, with Python 3.13.14 and PyYAML 6.0.3. No model, dataset or seed is involved.
 
-- Parse `config.yml` with PyYAML `safe_load`; check that its keys are exactly `blank_issues_enabled` and `contact_links`, that `blank_issues_enabled` is still `false`, and that there are three contact links, each with exactly `name`, `url` and `about`.
-- Check that the Q&A URL returns HTTP 200.
-- Check that no test or script reads the changed files (`git grep` over `tests`, `scripts` and `cassandra_chorus`), then run the full test suite.
-- Search every changed file for U+2013 and U+2014.
+- `config.yml` parses with PyYAML `safe_load`:
 
-**Not tested:** to be completed.
+  ```
+  python -c "import yaml; d = yaml.safe_load(open('.github/ISSUE_TEMPLATE/config.yml', encoding='utf-8')); print(sorted(d), d['blank_issues_enabled'], [(l['name'], sorted(l)) for l in d['contact_links']])"
+  ```
+
+  prints the keys `blank_issues_enabled` and `contact_links`, `False`, and three links (`Report a security problem privately`, `Code of conduct`, `Ask a question`), each with exactly `about`, `name` and `url`.
+- `curl -s -o /dev/null -w "%{http_code}" https://github.com/Cassandra-Collective/CASSANDRA-Chorus/discussions/categories/q-a` prints `200` signed out.
+- No test, script or package code reads the changed files: `git grep -n -E "ISSUE_TEMPLATE|config\.yml|CONTRIBUTING" -- tests scripts cassandra_chorus` finds nothing.
+- Full test suite on this branch, `python3.13.exe -m pytest -q -p no:cacheprovider`: `322 passed, 2 warnings in 953.47s (0:15:53)`, exit code 0. The changed files are not read by any test, so this confirms only that the branch is green.
+- No U+2013 or U+2014 in any changed file or commit message.
+
+**Not tested:** the rendered new-issue page. GitHub reads `config.yml` from the default branch only, and the page needs a signed-in account; after merging, "New issue" should show the five forms, the three contact links with "Ask a question" last, and no blank-issue option.
 
 ## Related Docs
 
