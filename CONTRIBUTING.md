@@ -105,4 +105,8 @@ Section 6 is about handling tokens and fetched files safely. This section is abo
 
 ## 11. Getting help
 
-For questions that are not yet an issue, see the organisation's [support page](https://github.com/Cassandra-Collective/.github/blob/main/SUPPORT.md). Questions about an existing issue go in its comments.
+- **Open questions and help:** ask in [Discussions Q&A](https://github.com/Cassandra-Collective/CASSANDRA-Chorus/discussions/categories/q-a). Anyone can answer there, and the answer that settles a question can be marked as accepted.
+- **A question that should be tracked as an issue,** for example one whose answer will need a change to the code or the documents: open an issue with the **Question** form on the new-issue page. It applies the `question` label.
+- **A question about an existing issue** goes in that issue's comments.
+
+The organisation's [support page](https://github.com/Cassandra-Collective/.github/blob/main/SUPPORT.md) explains what to expect.
