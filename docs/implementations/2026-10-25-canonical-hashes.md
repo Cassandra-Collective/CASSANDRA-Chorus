@@ -5,7 +5,7 @@
 | PLAN step | none; Phase 3, issue #62, architecture section 7.2 |
 | Branch | `feat/62-canonical-hashes`, from `origin/main` at `e05b024` |
 | SRS requirements | S0-N-05 (coordinator independence); D11 (expert router rows), D44 (working architecture) |
-| Status | Planned; CPU-only baseline passed on 2026-10-25 |
+| Status | Implemented and verified on CPU only, 2026-10-25; protocol proposals await owner review |
 
 ## Problem / Motivation
 
@@ -199,19 +199,35 @@ for state in golden_states():
     print(canonical_hash(state))
 ```
 
-The tests will retain the same `golden_states` constructor and literals.
-Part tests will use the real model's names on a 5,680-parameter transformer:
+The tests retain the same `golden_states` constructor and literals.
+Part tests use the real model's names on a 5,680-parameter transformer:
 2 layers, 4 experts per layer, width 16, expert hidden width 8, vocabulary 11,
 context 8, 2 heads. Seed 0 builds that fixture; seed 62 builds the three
 golden states. No training or dataset is involved in the new hash tests.
 
-Planned checks: golden compatibility; reordered and lazy inputs; bit, dtype,
-shape, name, and signed-zero sensitivity; exact part membership; locality of
-expert, router-row, and shared changes; sorted model encoding; slice equality;
-incomplete parts; invalid inputs; no input mutation; prototype import identity;
-and the unchanged prototype and layering tests. Final counts will be filled
-in after implementation. Check whitespace and forbidden dash characters in
-every touched file before the second commit.
+| Check | Observed result |
+|---|---|
+| Untouched baseline: `python -m pytest` | 310 passed, 12 skipped, 0 failed, 2 warning-capture warnings; 167.94 seconds. |
+| Focused: `python -m pytest tests/test_hashing.py tests/test_prototypes.py tests/test_layering.py` | 74 passed, 2 skipped, 0 failed; 7.99 seconds. |
+| Final: `python -m pytest` | 357 passed, 13 skipped, 0 failed, the same 2 warning-capture warnings; 123.76 seconds. |
+| Three pre-move golden digests | All match the moved implementation exactly. |
+| Executable AST bodies of `tensor_bytes` and `canonical_hash` against `origin/main:scripts/proto/common.py`, excluding docstrings | Identical. |
+| `__all__` against `sorted(__all__)` | Equal. |
+| `git diff --check` | Clean. |
+| `grep -nP '[\x{2013}\x{2014}]'` over all five touched files, through Git Bash | No output. A separate UTF-8 character scan also found none. |
+| Diff of `merge.py`, `tests/test_coordinator.py`, `tests/test_prototypes.py`, owner documents, and `results/` against `origin/main` | Empty. |
+
+The new tests cover golden compatibility; reordered and lazy inputs; bit,
+dtype, shape, name, and signed-zero sensitivity; noncontiguous inputs and
+gradient tracking; exact part membership and string ordering; locality of
+expert, router-row, and shared changes; exact sorted model encoding; slice
+equality; incomplete and wholly absent parts; invalid inputs; no input
+mutation or random-state consumption; and prototype import identity. The
+unchanged prototype tests and the coordinator layering test pass.
+
+The 48 new test cases account for 47 additional passes and one additional
+GPU skip. The GPU device-copy test was not run. The plan was committed alone
+as `9314654` before the package, shim, or test edits.
 
 **Not tested:** GPU device-copy equality (the marked test is skipped),
 cross-machine equality (#75), posting hashes in the round log (#64), and

@@ -11,7 +11,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from pathlib import Path
@@ -19,47 +18,13 @@ from typing import Any
 
 import torch
 
+from cassandra_chorus.coordinator.hashing import canonical_hash, tensor_bytes
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 RESULTS_DIR = REPO_ROOT / "results" / "prototypes"
 
 _INT_VIEW = {torch.float32: torch.int32, torch.float64: torch.int64, torch.float16: torch.int16,
              torch.bfloat16: torch.int16}
-
-
-def _dtype_name(dtype: torch.dtype) -> str:
-    return str(dtype).removeprefix("torch.")
-
-
-def tensor_bytes(t: torch.Tensor) -> bytes:
-    """The tensor's data as C-contiguous little-endian bytes, read on the CPU."""
-    t = t.detach().to("cpu").contiguous()
-    view = _INT_VIEW.get(t.dtype)
-    if view is not None:
-        t = t.view(view)  # numpy has no bfloat16; the bit pattern is what is hashed
-    arr = t.numpy()
-    if arr.dtype.byteorder == ">":
-        arr = arr.byteswap().view(arr.dtype.newbyteorder("<"))
-    return arr.tobytes(order="C")
-
-
-def canonical_hash(state: Mapping[str, torch.Tensor]) -> str:
-    """SHA-256 (hexadecimal) of the state's names, dtypes, shapes and bit patterns.
-
-    Tensors in ascending name order; for each: name (UTF-8), 0x00, dtype name,
-    0x00, shape as comma-joined integers, 0x00, data length as an 8-byte
-    little-endian integer, then the data. Equal hashes mean equal names,
-    dtypes, shapes and bits; file serialization does not enter.
-    """
-    h = hashlib.sha256()
-    for name in sorted(state):
-        t = state[name]
-        data = tensor_bytes(t)
-        h.update(name.encode("utf-8") + b"\x00")
-        h.update(_dtype_name(t.dtype).encode("ascii") + b"\x00")
-        h.update(",".join(str(d) for d in t.shape).encode("ascii") + b"\x00")
-        h.update(len(data).to_bytes(8, "little"))
-        h.update(data)
-    return h.hexdigest()
 
 
 class LazyState(Mapping[str, torch.Tensor]):
