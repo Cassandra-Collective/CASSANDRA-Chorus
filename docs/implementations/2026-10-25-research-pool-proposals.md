@@ -5,7 +5,7 @@
 | PLAN step | none; research track, issue #105 |
 | Branch | `research/105-research-pool-proposals` |
 | SRS requirements | S0-N-07 and research pre-registration under CONTRIBUTING section 5; no requirement changed |
-| Status | Planned; this document is the branch's first commit |
+| Status | Verified as documentation on 2026-10-25; no research runs performed |
 
 Research and writing only, after the #104 draft PR. No experiment is launched.
 
@@ -45,7 +45,15 @@ Use paired per-seed bpc differences dP=P-F and dM=S-P, with three seeds 7, 11 an
 
 ## Verification
 
-Planned: check all 34 proposal IDs occur once as detailed entries and once in the summary table; each has question, runs, dependency and conditional reading; check Group B local-data labels; validate configuration grids without training; verify Markdown paths, dash scan and diff scope. Confirm identical code/test trees to #104 before citing its full-suite result. Complete this section with observations after writing.
+Observed on 2026-10-25:
+
+- First commit `e91af05` contains this plan alone. The note was written afterward. Both branches start from main `a30dd6a`; #104's draft PR #128 was opened before this branch was created.
+- Checked the source inventory: twenty numbered gaps, thirteen additional items after removing citation separators, plus the appended centralized-sensitivity question. A document audit confirmed G01-G20 and N01-N14 each appear exactly once as detailed proposals and once in the summary table. All 34 entries contain Question, Runs, Dependency and an explicit conditional Reading. G12-G17 each state that they need the owner's local data.
+- Reviewed #87/#88/#103 mappings, shared controls, seeds and proposed run counts. Read the report's final new-code list item by item; no source gap is silently dropped when current code changes its classification.
+- CPU configuration checks validated the H and 2/4/8-worker grids, outer lr 1.6, all forty heterogeneous rolling assignments having exactly two holders per expert, and decay schedules of 40/72/36 rounds at final H off/25/250. No training was launched for these checks.
+- `git diff --check`: passed. The two written files contain no U+2013 or U+2014. All relative Markdown links resolve. Final changes are restricted to this plan and the note.
+- `git diff research/104-sliced-moe-remedies HEAD -- cassandra_chorus scripts tests configs pyproject.toml` is empty. The same unchanged code and test suite passed `python -m pytest` during #104: **339 passed**, two intentional warning-capture warnings, 310.30 seconds, CPU and CUDA. Reused this observed result rather than rerunning an unchanged suite for prose. Hardware: Windows reference laptop, Intel Core i7-13650HX, NVIDIA GeForce RTX 4070 Laptop GPU; Python 3.13.14 and PyTorch 2.12.1+cu126. No claim is made that the suite implements or tests these proposed algorithms.
+- Primary evidence reused by reference from #104: seven versioned arXiv HTML sources read directly. No new empirical literature number is added by this note.
 
 Target setting unless explicitly changed: Task B text8, 46,050,432 parameters, seeds 7, 11 and 19. Task A is explicitly marked where text8 options do not exist. No research measurements are produced.
 
