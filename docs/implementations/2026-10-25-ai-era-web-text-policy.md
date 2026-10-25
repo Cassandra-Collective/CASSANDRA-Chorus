@@ -5,7 +5,7 @@
 | PLAN step | None in the Stage 0 PLAN; ROADMAP corpus-policy task, issue #55 |
 | Branch | `research/55-ai-era-web-text` |
 | SRS requirements | D32 human-written, open-licensed pretraining text; D45 contribution process |
-| Status | Planned; verification below is registered before the research note |
+| Status | Verified locally on 2026-10-25: survey arithmetic, source and document checks, and repository tests; publication checks follow the research commit |
 
 ## Problem / Motivation
 
@@ -57,18 +57,21 @@ Any audit upper bound must state its sampling unit, independence assumptions and
 
 ## Verification
 
-Registered checks, to be completed with observed results before the research commit:
+Observed on 2026-10-25, against main base `a30dd6a804c50d895119abf182bad5a3fcbd5360`:
 
-- Confirm only the planned documents differ from the pinned main base and the first commit contains only this plan.
-- Recompute every derived table against the pinned surveys; check units, licence groups, date scopes and overlap exclusions.
-- Check primary source text, URLs, access dates and the distinction between external measurements and Chorus inferences.
-- Run `git diff --check` and scan every written file for U+2013 and U+2014; both must produce no findings.
-- Run `python -m pytest` as required by CONTRIBUTING; record the exact environment and result, including skips or limitations.
-- Verify the final commit, clean worktree, remote branch and draft PR state. Check that the PR includes owner questions, unresolved survey dependencies and the required closing reference.
+- `git diff-tree --no-commit-id --name-only -r a610e0b`: only this implementation plan. Its parent is the pinned main base. The first commit is `a610e0b`, `Plan: compare AI-era web-text policy options (#55)`.
+- Read both origin survey blobs at the commits above. Rechecked the main quantities against the Dolma author table, PG-19 raw README, ParlaMint v4.1 descriptive header and Wiki40B author table. Inherited unquantified source inventories and rights questions remain attributed to the pinned surveys.
+- Recomputed all derived comparisons in a temporary Python invocation, without adding a script: G, both wiki components, P, both combined envelopes, PG-19 replacement difference, wiki-character reduction, the paired total-reduction scenarios, Turkish/English extremes and repetition scenarios. Values match the displayed rounding. The paired total reductions are explicitly endpoint examples, not bounds across all independent conversion choices.
+- Read primary release announcements and original detector/web-measurement papers as text. Checked the distinction between detector-based prevalence and true authorship, and between release, source and capture dates. Corrected the DeGenTWeb description to identify archival-date cohorts, rather than the same sites followed over time. No Turkish rate was extrapolated from English evidence.
+- Python assertions checked all reference labels against their definitions, consistent Markdown table column counts, and existence of local relative-link targets. The note has 25 URL reference definitions, with an access date stated for all. All assertions passed.
+- `git diff --check` and a Unicode scan of both written documents found no whitespace errors or U+2013/U+2014 characters. Scope review found only the two planned documents; the owner-controlled specifications are unchanged. The staged diff is checked again before committing.
+- `python -m pytest`: **339 passed, 2 warnings, 290.03 seconds**, with no skipped tests. Both warnings came from the existing test that verifies warning capture. No new behavior or code was added, so no new implementation-mirroring tests were written.
 
-Hardware/environment: the owner's Windows laptop; exact CPU, Python and PyTorch versions will be recorded with the observed test result. Model size, training dataset and seeds: not applicable to documentary research. Literature datasets and measurement scopes will be stated with the corresponding evidence.
+Hardware/environment, observed using Python platform/PyTorch queries and Windows CIM: Windows 11 build 26300, Intel Core i7-13650HX, NVIDIA GeForce RTX 4070 Laptop GPU, Python 3.13.14, PyTorch 2.12.1+cu126, pytest 9.0.2; CUDA available. Scale/dataset/seeds for this work: documentary comparison of the pinned surveys and cited papers, no new research model, training dataset or seed. Repository tests use their existing fixtures and prescribed test seeds; passing them does not measure policy effectiveness. Literature measurement populations are stated alongside the corresponding claims in the note.
 
-**Not tested:** corpus downloads, complete rights clearance, true contamination, actual retained text volume, detector performance on Chorus, Turkish quality, model training or the later data pipeline. No research experiment result is created, so no RESULTS.md entry is planned.
+Publication verification follows the research commit: compare the pushed branch head with the local head, confirm a clean worktree, and inspect the single draft PR for base/head, closing reference, template checklist, survey dependencies and owner questions. These post-commit observations are reported in the PR handoff rather than represented as corpus evidence. The user authorizes only this branch push and one draft PR, with no merge or issue metadata/comment changes.
+
+**Not tested:** corpus downloads, complete rights clearance, true contamination, actual retained text volume, detector performance on Chorus, Turkish quality, model training or the later data pipeline. External measurement experiments were not reproduced. Some arXiv HTML routes were unavailable; original PDF text was used instead, so web access remained available and no stop condition occurred. No research experiment result was created, so no RESULTS.md entry is needed.
 
 ## Related Docs
 
