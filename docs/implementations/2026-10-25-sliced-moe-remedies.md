@@ -5,7 +5,7 @@
 | PLAN step | none; research track, issue #104 |
 | Branch | `research/104-sliced-moe-remedies` |
 | SRS requirements | Evidence for S0-F-05, S0-F-10 and S0-N-07; no requirement or owner decision changed |
-| Status | Planned; plan committed before the research note |
+| Status | Verified as documentation on 2026-10-25; no research runs performed |
 
 Research and writing only. No training runs are part of this task.
 
@@ -44,11 +44,20 @@ Use paired per-seed bpc differences. State whether a relative cost uses centrali
 
 ## Verification
 
-Planned: primary-source and numeric locator audit; option semantics and run-count review; `git diff --check`; U+2013/U+2014 scan of both written files; `python -m pytest`; first-commit and final-diff scope check. Record observed results and hardware after writing.
+Observed on 2026-10-25:
+
+- First commit `6c01042` contains this plan alone, before the note was created. The final scope is the two files listed above.
+- Read seven primary arXiv HTML documents directly, including setup, methods and the cited tables; checked that all seven cited table anchors exist in the fetched HTML. The note names versions and source limits. No search snippet supplies a number.
+- Audited configuration fields and worker, assignment, merge and gate semantics. A CPU check validated 48 combinations of capacity, mode and assignment; confirmed pinned rolling assignments match from round 0 to 39; and validated the 2/4/8-worker fixed-step settings. This checks configuration feasibility, not training behavior.
+- Reviewed every run estimate as configurations times three seeds and itemized shared controls. SPES score arithmetic is 50.95 - 48.99 = 1.96 points.
+- `git diff --check`: passed. `rg -n -P '[\x{2013}\x{2014}]'` on both written files: no matches. All relative Markdown links resolve.
+- `python -m pytest`: **339 passed**, two intentional warnings from the warning-capture test, 310.30 seconds. Windows reference laptop, Intel Core i7-13650HX and NVIDIA GeForce RTX 4070 Laptop GPU; Python 3.13.14, PyTorch 2.12.1+cu126. The suite includes CPU and CUDA tests, including synthetic model training; it is not a Task B remedy experiment.
 
 No experiment has run. Target: Task B text8, 46,050,432 parameters, four simulated workers unless stated, seeds 7, 11 and 19. Document verification cannot establish remedy effects.
 
 **Not tested:** new implementations, training outcomes, network performance, external paper reproducibility and the owner's saved artifacts.
+
+Unverified source details: SPES released-code defaults and their relation to Table 4, FoMoE random-placement timing, and figure-only effects. They are not used as measured support for a selected setting.
 
 ## Related Docs
 
