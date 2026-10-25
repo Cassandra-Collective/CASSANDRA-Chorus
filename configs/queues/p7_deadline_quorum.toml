@@ -1,0 +1,148 @@
+# P7 proposal, not launched. Review the plan before GPU work.
+# 36 runs, about 90 to 140 GPU hours (inference).
+# Each seed/peer block contains both Q_min candidates and both comparisons.
+stop_on_failure = true
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q1-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q2-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-synchronous-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-centralized-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q1-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q2-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-synchronous-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-centralized-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q1-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-deadline-q2-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-synchronous-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=7", "--set", "run.name=p7-centralized-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q1-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q2-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-synchronous-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-centralized-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q1-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q2-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-synchronous-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-centralized-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q1-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-deadline-q2-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-synchronous-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=11", "--set", "run.name=p7-centralized-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q1-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q2-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-synchronous-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-centralized-n3", "--set", "sim.n_workers=3", "--set", "sim.capacities=[6,5,5]", "--set", "sim.rounds=80", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q1-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q2-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-synchronous-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-centralized-n4", "--set", "sim.n_workers=4", "--set", "sim.capacities=[4,4,4,4]", "--set", "sim.rounds=60", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q1-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-deadline-q2-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=deadline", "--set", "sim.q_min=2"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-synchronous-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=synchronous", "--set", "sim.q_min=1"]
+
+[[run]]
+module = "scripts.train_task_b_sliced"
+args = ["--config", "configs/task_b/p7.toml", "--set", "run.seed=19", "--set", "run.name=p7-centralized-n5", "--set", "sim.n_workers=5", "--set", "sim.capacities=[4,3,3,3,3]", "--set", "sim.rounds=48", "--set", "sim.round_mode=centralized", "--set", "sim.q_min=1"]

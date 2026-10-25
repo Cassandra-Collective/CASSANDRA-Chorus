@@ -1,0 +1,53 @@
+# P7 proposal. Slots and offsets are identical across arms; all workers start online.
+version = 1
+
+[[event]]
+round = 4
+at = 40.0
+worker = "w0"
+action = "depart"
+
+[[event]]
+round = 6
+at = 30.0
+worker = "w0"
+action = "arrive"
+
+[[event]]
+round = 16
+at = 0.0
+worker = "w1"
+action = "depart"
+
+[[event]]
+round = 18
+at = 0.0
+worker = "w1"
+action = "arrive"
+
+[[event]]
+round = 32
+at = 70.0
+worker = "w2"
+action = "depart"
+
+[[event]]
+round = 34
+at = 0.0
+worker = "w2"
+action = "arrive"
+
+# Resolve these interventions against that slot's full-roster rolling assignment.
+[[holder_drop]]
+round = 10
+at = 45.0
+layer = 0
+expert = 0
+remaining = 1
+
+[[holder_drop]]
+round = 24
+at = 45.0
+layer = 0
+expert = 0
+remaining = 0

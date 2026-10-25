@@ -5,7 +5,7 @@
 | PLAN step | Stage 0 simulation extension; system study P7; #79 |
 | Branch | `exp/79-p7-deadline-quorum` |
 | SRS requirements | D39, D11, D12, D17, D19; S0-F-04 to S0-F-12, S0-N-04, S0-N-05 |
-| Status | Planned before code. Reading registered before any P7 run. |
+| Status | Verified implementation on CPU and existing full suite; no P7 experiment. Reading registered before runs. |
 
 Copied from `_TEMPLATE.md`. This document is committed alone before code.
 
@@ -59,6 +59,23 @@ counters. A subquorum round merges an empty list, preserving global values
 and outer velocity. Optional checkpoint metadata stores counters, synthetic
 elapsed time, synchronous retry position and centralized AdamW state. Legacy
 checkpoint calls retain their defaults. Resume must reproduce all of these.
+
+The final public contracts are:
+
+| API | Inputs, output and effects |
+|---|---|
+| `SimSection` | Frozen resolved settings; defaults select the legacy path. |
+| `ChurnEvent`, `HolderDrop`, `ChurnTape` | Immutable tape records; the loader validates their membership and timing invariants. |
+| `validate_deadline` | Settings in, list of setting errors out; no effects. |
+| `load_tape` | Settings, model dimensions and optional snapshot path in; validated tape out; reads files and raises on hash/schema/transition errors. |
+| `holder_counts` | Slices, worker IDs and expert count in; counts per layer out; no effects. |
+| `worker_times` | Settings, seed, tape slot and worker ID in; speed and upload time out; uses only a derived local RNG. |
+| `timed_round` | Settings, validated tape, reference slices, seed, slot and optional retry participants in; timing and counted sets out; no training or input mutation. |
+| `P7Runtime` | Optional saved metadata in; mutable counters and deferred central optimizer out; no training in construction. |
+| `P7Runtime.snapshot` | Runtime state in; checkpoint metadata out, including the central optimizer; no mutation. |
+| `execute_round` | Config, state, outer optimizer, runtime, timing, actual slices and batch factory in; new state, merge report, worker records and accounting out; trains spent work, advances counters and changes outer state only through counted merges. |
+| `evaluate_holder_quality` | Model, validation data, holder counts and optional tracked targets in; conditional BPC and population counts out; restores model mode and never changes routing/parameters. |
+| `save_checkpoint` | Existing inputs plus optional simulation metadata in; checkpoint path out; atomic file replacement with legacy defaults. |
 
 ### Time model
 
@@ -134,8 +151,9 @@ Equal steps are Stage 0's proxy, not equal FLOPs for full versus sliced models.
 
 Holder quality is conditional validation BPC on positions routed to each expert
 with zero or one counted holder, with scored counts and ordinary routing usage.
-Hooks observe existing MoE selections, never change routing, and are removed
-even on errors. This is the current full model on each expert's routed
+Forced targets are also tracked at two holders, before the drop and after recovery.
+The model's existing return_routing option observes MoE selections without
+changing routing. Evaluation restores mode even on errors. This is the full model on each expert's routed
 population, not that expert's isolated causal quality. Changing populations
 are a limitation. Use the same validation prefix in every arm. Final test BPC
 is descriptive and never selects Q_min.
@@ -154,8 +172,9 @@ example-weighted float64 averaging is unchanged.
 Steps run sum all h_i. Steps merged sum H over S_t. Aborted/late/partial work
 costs compute but contributes no merged steps. Centralized retained steps equal
 steps run. Tokens multiply steps by batch_size*grad_accum*context_length.
-Lateness is signed post-D; missing posts carry a reason. Synthetic time never
-uses measured host step time.
+Observed lateness is signed post-D; missing posts have null observed post time
+and lateness plus a reason. Forecast training/post times are separate fields.
+Synthetic time never uses measured host step time.
 
 ### Pre-registered reading, before any run
 
@@ -217,12 +236,36 @@ failures, 2 expected warning-capture warnings, 371.34 seconds. Environment: Wind
 3.13.14, PyTorch 2.12.1+cu126, NumPy 2.4.4, pytest 9.0.2; RTX 4070 Laptop GPU
 available. The baseline passed before implementation.
 
-Planned: complete suite; bit-for-bit tiny CPU comparison with the original
-round loop (including Nesterov velocity); seed/file replay, invalid tapes,
-exact deadline/departure boundaries, late exclusion, nonempty subquorum state
-invariance, holder/intervention/counted counts; tiny CPU pipelines/resume;
-queue parse without launch; layering and scope checks; git diff --check;
-scan every touched file for U+2013/U+2014. Fill final observed counts here.
+Final `python -m pytest`: **381 passed**, no skips or failures, 2 expected
+warning-capture warnings, 606.37 seconds, on the same Windows/Python/PyTorch
+environment as the baseline. This adds 42 CPU tests. The full suite includes
+the existing GPU checks on the RTX 4070 Laptop. New P7 training checks use CPU
+only, synthetic data and small models, not the queued 46.1M model.
+
+Confirmed: bit-for-bit comparison with the original round loop (including
+Nesterov velocity), seed/file replay, invalid tapes, exact deadline/departure
+boundaries, late exclusion, nonempty subquorum state invariance, forced and
+counted holder counts, tiny CPU pipelines and checkpoint replay. All 36 queue
+configurations parse without launch. Layering checks pass. Coordinator, merge,
+SRS, ROADMAP and ARCHITECTURE are unchanged. `git diff --check` passes; scanning
+all ten touched files finds no U+2013/U+2014. No stop condition occurred.
+
+Focused checks: the initial P7 selection passed 40 tests in 223.25 seconds.
+After review separated forecast and observed timing and added continuous
+tracking of forced targets, `python -m pytest tests/test_p7.py` passed all 33
+unit tests in 16.56 seconds. The pipeline checks exercise all three new modes,
+plain/Nesterov deadline state, persistent centralized AdamW, a changed source
+tape and rejection of a corrupt saved tape. The five features-off cases
+compare the actual entry point against the original a30dd6a loop for sliced,
+partial, full, whole-round drops and Nesterov, including exact tensor/velocity
+equality. Tiny smoke uses seed 7, dimensions 32, two layers, context 16,
+synthetic repeated ASCII text, and at most 18 offered optimizer steps per run.
+Time/configuration replay also covers seeds 11 and 19 without training.
+
+A timing-only inspection loaded all 36 GPU queue configurations and walked
+their tapes, without constructing models: minimum 23,237 steps spent and
+9,100 merged/retained. All have an 8,000-step bracket on both axes in this
+synthetic model. This confirms queue feasibility, not a quality result.
 
 No P7 run was made, so nothing about deadline-quorum quality is known yet.
 CPU smoke uses tiny models, synthetic text and only a few steps. Existing
