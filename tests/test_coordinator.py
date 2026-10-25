@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import importlib
+
 import pytest
 import torch
 
@@ -47,6 +49,36 @@ def worker_state(state, slice_: Slice, offset: float) -> dict[str, torch.Tensor]
 
 def make_slice(name, *layers) -> Slice:
     return Slice(name, {i: tuple(sorted(experts)) for i, experts in enumerate(layers)})
+
+
+def random_merge_inputs(full):
+    """Return seeded float32 global and worker states for full or sliced workers.
+
+    Unheld router rows keep the global values; example counts total 49.
+    """
+    generator = torch.Generator().manual_seed(60)
+    cfg = ModelSection(vocab_size=257, context_length=8, d_model=64, n_layers=2,
+                       n_heads=2, expert_hidden=64, n_experts=4)
+    g = {name: torch.randn(t.shape, dtype=torch.float32, generator=generator)
+         for name, t in MoETransformer(cfg).state_dict().items()}
+    assert sum(t.numel() for t in g.values()) >= 100_000
+    if full:
+        slices = [make_slice(name, range(E), range(E)) for name in "abc"]
+    else:
+        slices = [make_slice("a", [0, 1], [0, 1]), make_slice("b", [1, 2], [1, 2]),
+                  make_slice("c", [0, 2], [0, 2])]
+    results = []
+    for s, examples in zip(slices, (11, 17, 21)):
+        state = worker_state(g, s, 0.0)
+        for name, t in state.items():
+            t.copy_(torch.randn(t.shape, dtype=torch.float32, generator=generator))
+            layer = router_param_layer(name)
+            if layer is not None:
+                for e in range(t.shape[0]):
+                    if not s.holds(layer, e):
+                        t[e] = g[name][e]
+        results.append(WorkerResult(s, state, examples))
+    return g, results
 
 
 # ---------------------------------------------------------------- assignment
@@ -122,6 +154,27 @@ def test_slices_build_slice_models():
 
 
 # ---------------------------------------------------------------- merge
+
+
+@pytest.mark.parametrize("outer_cls", [PlainAverage, NesterovOuter])
+@pytest.mark.parametrize("router_rule", ["holders", "all"])
+@pytest.mark.parametrize("full", [False, True], ids=["sliced", "full"])
+def test_cpu_merge_is_unchanged(monkeypatch, outer_cls, router_rule, full):
+    def old_weighted_mean(tensors, weights):
+        total = sum(weights)
+        acc = torch.zeros_like(tensors[0], dtype=torch.float64)
+        for t, w in zip(tensors, weights):
+            acc += t.to(torch.float64) * w
+        return acc / total
+
+    g, results = random_merge_inputs(full)
+    merge_module = importlib.import_module("cassandra_chorus.coordinator.merge")
+    with monkeypatch.context() as patch:
+        patch.setattr(merge_module, "_weighted_mean", old_weighted_mean)
+        reference, _ = merge(g, results, router_rule=router_rule, outer=outer_cls())
+    actual, _ = merge(g, results, router_rule=router_rule, outer=outer_cls())
+    for name in g:
+        assert torch.equal(actual[name], reference[name]), name
 
 
 def test_shared_part_is_the_example_weighted_average():
@@ -258,6 +311,17 @@ def test_holders_helper():
 # ---------------------------------------------------------------- outer optimizer
 
 
+def test_nesterov_velocity_stays_float64_for_float32_parameters():
+    g = global_state()
+    s = make_slice("a", range(E), range(E))
+    outer = NesterovOuter(lr=0.7, momentum=0.9)
+    assert all(t.dtype == torch.float32 for t in g.values())
+    merge(g, [WorkerResult(s, worker_state(g, s, 0.3), 3)], outer=outer)
+    assert outer.velocity.keys() == g.keys()
+    for name, velocity in outer.velocity.items():
+        assert velocity.dtype == torch.float64, name
+
+
 def test_nesterov_with_lr1_momentum0_equals_plain_average():
     g = global_state()
     a, b = make_slice("a", [0, 1], [0, 1]), make_slice("b", [1, 2], [1, 2])
@@ -298,4 +362,20 @@ def test_merge_on_cuda_matches_cpu(router_rule):
     gpu, _ = merge(g_cuda, results_cuda, router_rule=router_rule, outer=NesterovOuter(0.7, 0.9))
     for name in g:
         assert gpu[name].device.type == "cuda"
-        assert torch.allclose(gpu[name].cpu(), cpu[name], atol=1e-6), name
+        assert torch.equal(gpu[name].cpu(), cpu[name]), name
+
+
+@pytest.mark.gpu
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="needs a CUDA GPU")
+@pytest.mark.parametrize("outer_cls", [PlainAverage, NesterovOuter])
+@pytest.mark.parametrize("router_rule", ["holders", "all"])
+@pytest.mark.parametrize("full", [False, True], ids=["sliced", "full"])
+def test_random_merge_on_cuda_matches_cpu(outer_cls, router_rule, full):
+    g, results = random_merge_inputs(full)
+    cpu, _ = merge(g, results, router_rule=router_rule, outer=outer_cls())
+    g_cuda = {k: v.cuda() for k, v in g.items()}
+    results_cuda = [WorkerResult(r.slice, {k: v.cuda() for k, v in r.state.items()}, r.examples) for r in results]
+    gpu, _ = merge(g_cuda, results_cuda, router_rule=router_rule, outer=outer_cls())
+    for name in g:
+        assert gpu[name].device.type == "cuda"
+        assert torch.equal(gpu[name].cpu(), cpu[name]), name

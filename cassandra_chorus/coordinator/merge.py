@@ -70,6 +70,10 @@ class NesterovOuter:
     Only entries that had contributors this round move; elsewhere both the
     parameter and its velocity are left as they are. lr=1, momentum=0 gives
     :class:`PlainAverage`.
+
+    Velocity tensors are float64 and must be stored and published as float64
+    (architecture section 7.1 step 5). In P6, float32 storage changed round 2's
+    merged model in 204,432 elements.
     """
 
     def __init__(self, lr: float = 1.0, momentum: float = 0.9) -> None:
@@ -128,7 +132,8 @@ def _weighted_mean(tensors: list[torch.Tensor], weights: list[float]) -> torch.T
     acc = torch.zeros_like(tensors[0], dtype=torch.float64)
     for t, w in zip(tensors, weights):
         acc += t.to(torch.float64) * w
-    return acc / total
+    # A device tensor requests IEEE division; a Python scalar uses its reciprocal on CUDA.
+    return acc / torch.tensor(total, dtype=torch.float64, device=acc.device)
 
 
 def merge(
