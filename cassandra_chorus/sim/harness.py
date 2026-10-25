@@ -42,6 +42,19 @@ class SimSection:
     skew: float = 0.0
     equal_compute_steps: int = 5000
     decay_local_steps: int = 0  # local steps per round once the learning-rate decay starts; 0 keeps local_steps
+    round_mode: Literal["legacy", "deadline", "synchronous", "centralized"] = "legacy"
+    q_min: int = 1
+    round_length: float = 160.0
+    deadline: float = 110.0
+    grace: float = 10.0
+    speed_min: float = 0.75
+    speed_max: float = 1.25
+    upload_min: float = 1.0
+    upload_max: float = 8.0
+    sync_timeout: float = 200.0
+    churn_file: str = ""
+    churn_sha256: str = ""
+    holder_quality: bool = False
 
 
 def worker_specs(sim: SimSection) -> list[WorkerSpec]:
@@ -69,6 +82,9 @@ def validate_sim(sim: SimSection, n_experts: int, top_k: int) -> None:
         problems.append("drop_prob and skew must be in [0, 1]")
     if sim.decay_local_steps < 0:
         problems.append("decay_local_steps must be 0 (off) or positive")
+    from cassandra_chorus.sim.deadline import validate_deadline
+
+    problems.extend(validate_deadline(sim))
     if problems:
         raise ValueError("invalid simulation configuration: " + "; ".join(problems))
 
@@ -132,8 +148,12 @@ CHECKPOINT_NAME = "checkpoint.pt"
 
 
 def save_checkpoint(run_dir: Path, completed_round: int, global_state: Mapping[str, torch.Tensor],
-                    outer: PlainAverage | NesterovOuter, config_hash: str) -> Path:
-    """Atomically write the state after ``completed_round`` (temporary file, then replace)."""
+                    outer: PlainAverage | NesterovOuter, config_hash: str, *, simulation: dict | None = None) -> Path:
+    """Atomically save the completed round, model, outer state and optional replay metadata.
+
+    Returns the checkpoint path. Replaces that file; does not mutate the inputs.
+    Omitting simulation retains the legacy payload.
+    """
     path = Path(run_dir) / CHECKPOINT_NAME
     tmp = path.with_suffix(".pt.tmp")
     payload: dict[str, Any] = {
@@ -142,6 +162,8 @@ def save_checkpoint(run_dir: Path, completed_round: int, global_state: Mapping[s
         "global_state": {k: v.detach().cpu() for k, v in global_state.items()},
         "outer_velocity": {k: v.cpu() for k, v in outer.velocity.items()} if isinstance(outer, NesterovOuter) else None,
     }
+    if simulation is not None:
+        payload["simulation"] = simulation
     torch.save(payload, tmp)
     os.replace(tmp, path)
     return path

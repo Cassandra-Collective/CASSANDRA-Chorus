@@ -46,6 +46,8 @@ from cassandra_chorus.sim import (
     validate_sim,
     worker_specs,
 )
+from cassandra_chorus.sim.deadline import load_tape, timed_round
+from cassandra_chorus.sim.p7 import P7Runtime, evaluate_holder_quality, execute_round
 from cassandra_chorus.train import OptimSection, check_schedule, decay_start
 
 
@@ -80,7 +82,8 @@ def check(cfg: SlicedTaskBConfig, data: Text8) -> None:
     if cfg.eval.curve_max_chars <= cfg.text8.context_length:
         problems.append("eval.curve_max_chars must be longer than one window")
     for check_fn in (lambda: validate_sim(cfg.sim, cfg.model.n_experts, cfg.model.top_k),
-                     lambda: check_schedule(cfg.optim, cfg.sim.rounds * cfg.sim.local_steps),
+                     lambda: check_schedule(cfg.optim, cfg.sim.equal_compute_steps if cfg.sim.round_mode == "centralized"
+                                            else cfg.sim.rounds * cfg.sim.local_steps),
                      lambda: plan_rounds(cfg)):
         try:
             check_fn()
@@ -120,6 +123,9 @@ def main(argv: list[str] | None = None) -> int:
     data = Text8(cfg.text8)
     check(cfg, data)
     sim = cfg.sim
+    p7 = sim.round_mode != "legacy"
+    tape = load_tape(sim, cfg.model.n_layers, cfg.model.n_experts, cfg.model.top_k,
+                     args.resume / "churn.toml" if args.resume is not None and sim.churn_file else None) if p7 else None
     repro.prepare_process(cfg.run.determinism)  # before any CUDA work
     repro.set_cpu_threads(cfg.run.cpu_threads)
     device = torch.device(cfg.run.device)
@@ -142,6 +148,7 @@ def main(argv: list[str] | None = None) -> int:
         log = RunLogger.reopen(args.resume)
         determinism = repro.apply_determinism(cfg.run.determinism)
         start_round, global_state = load_checkpoint(args.resume, chash, outer, device)
+        runtime = P7Runtime(torch.load(args.resume / "checkpoint.pt", map_location="cpu")["simulation"]) if p7 else None
         log.write("resume", from_round=start_round, environment=repro.environment_info(),
                   determinism=determinism, git=git_state()[0])
     else:
@@ -150,19 +157,63 @@ def main(argv: list[str] | None = None) -> int:
         global_state = {k: v.to(device) for k, v in MoETransformer(cfg.model).state_dict().items()}  # same init as centralized
         log.write_header(config=cfg, config_path=config_path, seeds=seeds,
                          environment=repro.environment_info(), determinism=determinism)
+        budget = ({"offered_worker_steps": total_steps, "offered_characters": total_steps * characters_per_step}
+                  if p7 else {"worker_steps": total_steps, "characters": total_steps * characters_per_step})
         log.write("setup", parameters=count_parameters(MoETransformer(cfg.model)), vocab_size=data.vocab_size,
-                  text8_path=str(data.path), text8_sha256=cfg.text8.sha256, worker_steps=total_steps,
-                  characters=total_steps * characters_per_step)
+                  text8_path=str(data.path), text8_sha256=cfg.text8.sha256, **budget)
         start_round = 0
+        runtime = P7Runtime() if p7 else None
+        if p7 and sim.churn_file:
+            snapshot = Path(sim.churn_file).read_bytes()
+            (log.run_dir / "churn.toml").write_bytes(snapshot)
+            load_tape(sim, n_layers, n_experts, top_k, log.run_dir / "churn.toml")
 
     batch_size = cfg.optim.batch_size
     stopped = False
     with log:
         try:
             with operations(log, ops_settings, ops_source, checks), log.capture_warnings():
+                if p7 and start_round == 0:
+                    initial = evaluate_bpc(full_model(cfg, global_state, device), data, "valid", device,
+                                           max_chars=cfg.eval.curve_max_chars)
+                    log.write("p7_initial", cumulative_steps_run=0, cumulative_steps_merged=0,
+                              cumulative_tokens_run=0, cumulative_tokens_merged=0,
+                              cumulative_simulated_seconds=0.0, **initial)
                 for r in range(start_round, len(plan)):
                     first_step, local_steps = plan[r]
                     t0 = time.perf_counter()
+                    if p7:
+                        reference = round_slices(sim, n_layers, n_experts, top_k, r, cfg.run.seed)
+                        slices = round_slices(sim, n_layers, n_experts, top_k, runtime.assignment_round, cfg.run.seed)
+                        timing = timed_round(sim, tape, cfg.run.seed, r, reference, n_experts,
+                                             runtime.pending_workers if sim.round_mode == "synchronous" else None)
+
+                        def batch_factory(i):
+                            """Return this tape slot's seeded batch callback for worker i."""
+                            generator = data_generator(cfg.run.seed, i, r)
+                            return lambda: data.sample(batch_size, generator)
+
+                        assignment_round = runtime.assignment_round
+                        global_state, report, workers, accounting = execute_round(
+                            cfg, global_state, outer, runtime, timing, slices, r, batch_factory, device)
+                        model = full_model(cfg, global_state, device)
+                        merged = evaluate_bpc(model, data, "valid", device, max_chars=cfg.eval.curve_max_chars)
+                        quality = evaluate_holder_quality(model, data, report["holder_counts"], device,
+                                                          cfg.eval.curve_max_chars,
+                                                          {(d.layer, d.expert) for d in tape.holder_drop}) if sim.holder_quality else []
+                        seconds = time.perf_counter() - t0
+                        log.write("round", round=r, start_step=assignment_round * sim.local_steps,
+                                  local_steps=local_steps, assignment_round=assignment_round, seconds=seconds,
+                                  round_mode=sim.round_mode, workers=workers, merge=report,
+                                  timing={k: v for k, v in timing.items() if k != "workers"},
+                                  holder_quality=quality, **accounting, **merged)
+                        save_checkpoint(log.run_dir, r, global_state, outer, chash, simulation=runtime.snapshot())
+                        print(f"round {r + 1:3d}/{len(plan)}  validation bpc {merged['bpc']:.4f}  "
+                              f"steps run/merged {runtime.steps_run}/{runtime.steps_merged}  ({seconds:.0f}s)", flush=True)
+                        del model
+                        if args.stop_after_round is not None and r >= args.stop_after_round and r < len(plan) - 1:
+                            raise StopAfterRound(r)
+                        continue
                     slices = round_slices(sim, n_layers, n_experts, top_k, r, cfg.run.seed)
                     dropped = dropped_workers(sim, r, cfg.run.seed)
                     results, workers = [], []
@@ -198,8 +249,13 @@ def main(argv: list[str] | None = None) -> int:
                 test = evaluate_bpc(model, data, "test", device)
                 if cfg.eval.save_model:
                     torch.save(model.state_dict(), log.run_dir / "final_model.pt")
-                log.write("final", rounds=len(plan), worker_steps=total_steps,
-                          characters=total_steps * characters_per_step, test=test,
+                p7_final = ({"offered_worker_steps": total_steps, "steps_run": runtime.steps_run,
+                             "steps_merged": runtime.steps_merged, "tokens_run": runtime.steps_run * characters_per_step,
+                             "tokens_merged": runtime.steps_merged * characters_per_step,
+                             "simulated_seconds": runtime.elapsed} if p7 else {})
+                log.write("final", rounds=len(plan), worker_steps=runtime.steps_run if p7 else total_steps,
+                          characters=(runtime.steps_run if p7 else total_steps) * characters_per_step, test=test,
+                          **p7_final,
                           model_file="final_model.pt" if cfg.eval.save_model else None)
         except StopAfterRound as stop:
             log.close("stopped", after_round=stop.args[0])
