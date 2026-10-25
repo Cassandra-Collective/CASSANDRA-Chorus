@@ -5,7 +5,7 @@
 | PLAN step | None in Stage 0; roadmap 2.1b, issue #54 |
 | Branch | `research/54-turkish-sources` |
 | SRS requirements | D31, English and Turkish; D32, open-licensed human-written text; D45, owner decisions |
-| Status | Planned on Windows; research and verification pending |
+| Status | Verified on Windows on 2026-10-25; primary-source research, arithmetic and repository tests complete |
 
 Copied from the implementation template before research. Commit this plan alone before writing the note.
 
@@ -49,9 +49,27 @@ Inference: subject to confirmation in the paper, use about 20 training tokens pe
 
 ## Verification
 
-Planned: count candidate sources examined and kept; record how every licence was read; enumerate unverifiable numbers; check numeric conversions and source overlap. Inspect diff and links, require no U+2013 or U+2014 in written files, and run `python -m pytest` as required by CONTRIBUTING. Confirm the plan-only first commit, only the two planned files changed, correct base, clean worktree and one draft PR.
+Research outcome: 13 candidate sources examined, 7 conditional keeps, 6 rejects and no unconditional training approvals. Two quantified retained leads give a gross 0.249084794 to 0.561142907B Turkish-token scenario before exclusions. The English ratio is included using remote commit `e637be6b87af34d065f95c7511e7d65ed0f5d8b1`; this is a comparison of conditional scenarios, not measured usable corpora. The note includes model-size and repetition tables for 100M, 300M and 1B parameters, with an explicitly illustrative bilingual share.
 
-Environment: owner's Windows laptop, hardware details to be recorded. Model size, training dataset and seeds: not applicable, no training experiment. No RESULTS entry is planned because this is a source survey without an experimental run. Results pending.
+Licence verification: fetched and read primary legal texts for CC BY 4.0, BY-SA 3.0, BY-SA 4.0, BY-NC-SA 4.0, CC0 1.0, ODC-By v1.0 and Common Crawl terms. Read Turkish Law 5846 from the Ministry of Culture's linked official PDF, including articles 6, 8, 14 to 19, 26, 27, 31, 32, 46, 47 and Additional Article 2; cross-checked relevant provisions in the ministry's English counterpart. Compared those texts with each source's publisher statement. TNC's full agreement could not be read and that route is rejected. No underlying rights were inferred from a database licence. Wikipedia's stale 3.0 card versus the post-transition 4.0 source terms and ParlaMint's underlying speech-rights condition are explicitly recorded.
+
+Unverified quantities and rights: the note's Verification section lists them per source. They include final Chorus tokenizer counts, retention fractions, overlap, human-authorship contamination, unquantified books/legal/journal volumes, source-wide dates and rights, some archive byte totals, inaccessible bulk routes, TNC terms, statutory consolidation through every amendment, territorial clearance and weight rights. The live Wikipedia aggregate mean is rounded and not commit-addressed; the pinned card's matching article count was verified. No corpus or corpus-text sample was downloaded; only primary documents and metadata were fetched outside the repository and OneDrive.
+
+Checks run on 2026-10-25:
+
+| Check | Observed result |
+|---|---|
+| `python -m pytest -q` | 339 passed in 406.27 seconds; two warnings deliberately emitted by the warning-capture test. No source-code changes preceded or followed the run. |
+| Python arithmetic audit | Recomputed full-split character estimate, per-source conversion intervals, non-additive alternative, class totals, interval-ratio extremes and all repetition scenarios. Published counts stay distinct from inferred tokens. |
+| Reference/structure audit | 13 source-table rows, 7 C and 6 R; 45 external reference definitions, no undefined or unused reference labels; linked local documents exist. Failed external endpoints are explicitly documented. |
+| Pinned Wikipedia card | HTTP 200 at `b04c8d1ceb2f5cd4588862100d08de323dccfbaa`; text matches the card read for the published counts. |
+| `rg -nP '[\x{2013}\x{2014}]'` on both written files | No matches; no em or en dashes. |
+| `git diff --check` and scope inspection | No whitespace errors; only this plan and the research note differ from the base. |
+| Base and first commit | Fresh external worktree based on `a30dd6a804c50d895119abf182bad5a3fcbd5360`; `b4b7b34` committed the plan alone with the requested message. |
+
+Environment: Windows 11, Intel Core i7-13650HX, NVIDIA GeForce RTX 4070 Laptop GPU with 8,585,216,000 reported device-memory bytes, Python 3.13.14, PyTorch 2.12.1+cu126, CUDA 12.6 and pytest 9.0.2. Test run/data paths were set outside OneDrive. Model size, training dataset and seeds: not applicable, no training experiment. No RESULTS entry because this is a source survey without an experimental run.
+
+Delivery: commit the completed plan and note with `Turkish pretraining sources survey (#54)`, push only `research/54-turkish-sources`, and open one draft PR from the repository template with `Closes #54` and the owner questions. Final remote-state and clean-worktree verification follows that commit; no merge or issue mutation is authorized.
 
 **Not tested:** exhaustive copyright clearance, source-wide human authorship, processing/deduplication, future tokenizer counts, training, bilingual task quality, local inference, post-AI web policy (#55), or pipeline work (#56).
 
