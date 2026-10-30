@@ -7,6 +7,7 @@ may import ``cassandra_chorus.sim`` (SRS S0-N-05, enforced by
 """
 
 from cassandra_chorus.coordinator.assignment import Slice, WorkerSpec, assign_slices, holders
+from cassandra_chorus.coordinator.hashing import canonical_hash, model_hash, part_hashes, split_state, tensor_bytes
 from cassandra_chorus.coordinator.merge import MergeReport, NesterovOuter, PlainAverage, WorkerResult, merge
 
 __all__ = [
@@ -17,6 +18,11 @@ __all__ = [
     "WorkerResult",
     "WorkerSpec",
     "assign_slices",
+    "canonical_hash",
     "holders",
     "merge",
+    "model_hash",
+    "part_hashes",
+    "split_state",
+    "tensor_bytes",
 ]
